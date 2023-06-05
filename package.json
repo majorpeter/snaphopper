@@ -1,0 +1,19 @@
+{
+  "name": "snaphopper",
+  "version": "1.0.0",
+  "description": "A web application to manage docker compose installations accross file system snapshots.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "docker",
+    "docker-compose",
+    "snapshot",
+    "zfs",
+    "vue",
+    "ssh"
+  ],
+  "author": "Peter Major",
+  "license": "ISC"
+}
