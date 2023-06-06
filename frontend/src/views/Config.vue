@@ -1,5 +1,14 @@
 <template>
     <form @submit.prevent="submit">
+        <div class="alert alert-success alert-dismissible fade show" role="alert" v-if="saved">
+          Configuration successfully saved!
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @click="saved=false"></button>
+        </div>
+
+        <div class="alert alert-danger show" role="alert" v-if="error">
+            Configuration could not be saved.
+        </div>
+
         <fieldset :disabled="!loaded">
             <div class="form-group row mb-2">
                 <label for="portNumber" class="col-sm-3 col-form-label">Listening port number</label>
@@ -31,7 +40,10 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary" :disabled="saving">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="saving"></span>
+                Submit
+            </button>
     </fieldset>
     </form>
 </template>
@@ -46,12 +58,25 @@ export default defineComponent({
   data() {
     return {
       config: <endpoints.config.type> {},
-      loaded: false
+      loaded: false,
+      saving: false,
+      saved: false,
+      error: false
     };
   },
   methods: {
     async submit() {
-        await axios.post(API_PREFIX + endpoints.config.url, this.config);
+        this.saving = true;
+        this.saved = this.error = false;
+
+        try {
+            await axios.post(API_PREFIX + endpoints.config.url, this.config);
+            this.saved = true;
+        } catch (e) {
+            this.error = true;
+        } finally {
+            this.saving = false;
+        }
     }
   },
   async created() {
