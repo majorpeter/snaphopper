@@ -23,6 +23,17 @@ export class Zfs {
         return match ? match[0] : null;
     }
 
+    async getDataSetFsUsage(dataset: string): Promise<{
+        used: string;
+        referenced: string;
+    }> {
+        const output = (await this._exec('sudo', ['zfs', 'list', '-H', '-o', 'used,referenced', dataset])).split('\t');
+        return {
+            used: output[0],
+            referenced: output[1]
+        };
+    }
+
     async getSnapshots(dataset: string): Promise<{
         name: string;
         used: string;

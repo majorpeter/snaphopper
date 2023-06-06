@@ -93,9 +93,13 @@ async function createSshConnectionServices() {
                 };
 
                 if (zfs) {
-                    data.zfs_dataset = await zfs.getDataSetByMountPoint(data.working_directory);
-                    if (data.zfs_dataset) {
-                        data.zfs_snapshots = (await zfs.getSnapshots(data.zfs_dataset)).sort((a, b) => (a.name < b.name) ? 1 : -1);
+                    const datasetName = await zfs.getDataSetByMountPoint(data.working_directory);
+                    if (datasetName) {
+                        data.zfs_dataset = {
+                            name: datasetName,
+                            ...await zfs.getDataSetFsUsage(datasetName)
+                        }
+                        data.zfs_snapshots = (await zfs.getSnapshots(datasetName)).sort((a, b) => (a.name < b.name) ? 1 : -1);
                     }
                 }
 

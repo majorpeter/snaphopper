@@ -32,7 +32,11 @@ export namespace endpoints {
             }[];
             working_directory: string;
             compose_config_file: string;
-            zfs_dataset: string|null;
+            zfs_dataset: null|{
+                name: string;
+                used: string;
+                referenced: string;
+            };
             zfs_snapshots: {
                 name: string;
                 used: string;

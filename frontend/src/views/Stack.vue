@@ -21,7 +21,13 @@
         </td>
     </tr><tr>
         <th>ZFS Dataset:</th>
-        <td><code>{{ data.zfs_dataset }}</code></td>
+        <td><code>{{ data.zfs_dataset?.name }}</code></td>
+    </tr><tr v-if="data.zfs_dataset">
+        <th>Filesystem usage:</th>
+        <td>
+            <p class="m-0">Used: <strong>{{ data.zfs_dataset.used }}</strong></p>
+            <p class="m-0">Referenced: <strong>{{ data.zfs_dataset.referenced }}</strong></p>
+        </td>
     </tr><tr>
         <th>Services count:</th>
         <td v-if="data.containers">{{ data.containers.length }}</td>
