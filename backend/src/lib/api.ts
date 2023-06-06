@@ -4,7 +4,12 @@ export namespace endpoints {
         export interface type {
             connected: boolean;
             projects: {[key: string]: {
-                    containers: string[];
+                    containers: {
+                        name: string;
+                        service: string;
+                        image_name: string;
+                        image_hash: string;
+                    }[];
                     updateAvailable: boolean;
                 }
             };

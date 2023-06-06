@@ -78,9 +78,16 @@ async function createDockerSshConnection() {
         if (docker) {
             const projects = await docker.getDockerComposeProjects();
 
-            for (const i of projects.keys()) {
+            for (const i of Object.keys(projects)) {
                 data.projects[i] = {
-                    containers: projects.get(i)!,    //TODO more fields
+                    containers: projects[i].map((value) => {
+                        return <endpoints.stack_list.type['projects']['']['containers'][0]> {
+                            name: value.Name.replace(/^\//,''),
+                            service: value.Config.Labels[Docker.serviceNameLabel],
+                            image_name: value.Config.Image,
+                            image_hash: value.Image
+                        };
+                    }),    //TODO more fields
                     updateAvailable: false //TODO implement
                 };
             }
@@ -118,10 +125,14 @@ async function createDockerSshConnection() {
             return;
         }
 
-        const containerData = await docker.inspectContainers([containerName]);
-        const imageData = await docker.inspectImages([containerData[0].Image]);
+        if (docker) {
+            const containerData = await docker.inspectContainers([containerName]);
+            const imageData = await docker?.inspectImages([containerData[0].Image]);
 
-        res.send((await DockerHub.getImageTags(imageData[0].RepoTags[0].split(':')[0])).reverse());
+            res.send((await DockerHub.getImageTags(imageData[0].RepoTags[0].split(':')[0])).reverse());
+        } else {
+            res.sendStatus(500);
+        }
     });
 })();
 

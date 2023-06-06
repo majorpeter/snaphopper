@@ -2,6 +2,32 @@ import path from 'path';
 
 export type exec = (command: string, args: string[]) => Promise<string>;
 
+export interface ContainerInfo {
+    Id: string;
+    Created: string; //time
+    Path: string;
+    Args: string[];
+    State: {
+        Status: string;
+        Running: boolean;
+        Paused: boolean;
+        Restarting: boolean;
+        OOMKilled: boolean;
+        Dead: boolean;
+        Pid: number;
+        ExitCode: number;
+        Error: string;
+        StartedAt: string; //time
+        FinishedAt: string; //time
+    };
+    Image: string;
+    Config: {
+        Image: string;
+        Labels: {[key: string]: string};
+    };
+    Name: string;
+};
+
 export class Docker {
     _exec: exec;
 
@@ -22,30 +48,7 @@ export class Docker {
         return (await this._exec('docker', ['container', 'ls', '--format', '{{.Names}}'])).split('\n');
     }
 
-    async inspectContainers(names: string[]): Promise<[{
-        Id: string;
-        Created: string; //time
-        Path: string;
-        Args: string[];
-        State: {
-            Status: string;
-            Running: boolean;
-            Paused: boolean;
-            Restarting: boolean;
-            OOMKilled: boolean;
-            Dead: boolean;
-            Pid: number;
-            ExitCode: number;
-            Error: string;
-            StartedAt: string; //time
-            FinishedAt: string; //time
-        };
-        Image: string;
-        Config: {
-            Labels: {[key: string]: string};
-        };
-        Name: string;
-    }]> {
+    async inspectContainers(names: string[]): Promise<ContainerInfo[]> {
         return JSON.parse(await this._exec('docker', ['container', 'inspect', ...names]));
     }
 
@@ -61,18 +64,18 @@ export class Docker {
         return JSON.parse(await this._exec('docker', ['image', 'inspect', ...names]));
     }
 
-    async getDockerComposeProjects(): Promise<Map<string, string[]>> {
+    async getDockerComposeProjects(): Promise<{[key: string]: ContainerInfo[]}> {
         const containers = await this.getContainers();
         const container_data = await this.inspectContainers(containers);
     
-        let result = new Map<string, string[]>()
+        let result = <{[key: string]: ContainerInfo[]}> {}
         for (let i of container_data) {
             const project = i.Config.Labels[Docker.projectLabel];
             if (project !== undefined) {
-                if (!result.has(project)) {
-                    result.set(project, []);
+                if (!(project in result)) {
+                    result[project] = [];
                 }
-                result.get(project)?.push(i.Name.replace(/^\//,''));
+                result[project]?.push(i);
             }
         }
         return result;
