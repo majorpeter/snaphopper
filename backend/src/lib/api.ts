@@ -2,7 +2,10 @@ export namespace endpoints {
     export namespace stack_list {
         export const url = '/stacks';
         export interface type {
-            name: string;
+            [key: string]: {
+                containers: string[];
+                updateAvailable: boolean;
+            };
         };
     }
 

@@ -1,4 +1,6 @@
 import express, {Express, Request, Response} from 'express';
+import cors from 'cors';
+
 import {endpoints} from './lib/api';
 import fs from 'fs';
 import path from 'path';
@@ -11,9 +13,13 @@ const config: {
     ssh_host: string;
     ssh_username: string;
     ssh_privkey_path: string;
+    cors_enabled: boolean;  // for dev server
 } = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json')).toString());
 
 const app: Express = express();
+if (config.cors_enabled) {
+    app.use(cors());
+}
 let docker: Docker;
 
 (async() => {
@@ -48,6 +54,18 @@ let docker: Docker;
         }
         res.end();
     });
+
+    app.get(endpoints.stack_list.url, async (req: Request, res: Response) => {
+        const projects = await docker.getDockerComposeProjects();
+        let data: endpoints.stack_list.type = {};
+        for (const i of projects.keys()) {
+            data[i] = {
+                containers: projects.get(i)!,    //TODO more fields
+                updateAvailable: false //TODO implement
+            };
+        }
+        res.send(data);
+    })
 
     app.get(endpoints.container.url_fmt, async (req: Request, res: Response) => {
         res.contentType('txt');

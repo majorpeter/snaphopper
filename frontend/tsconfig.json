@@ -1,0 +1,18 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "baseUrl": "..",
+        "paths": {
+            "@api": ["backend/src/lib/api"]
+            /*"./*": [
+                "./src/*"
+            ]*/
+        },
+        "composite": true,
+        "rootDirs": ["frontend/src", "backend/src/lib"]
+    },
+    "references": [
+        {"path": "../backend"}
+    ]
+    //"include": ["src/**/*", "../backend/src/lib/api.ts"]
+}
