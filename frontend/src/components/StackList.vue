@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import StackListItem from './StackListItem.vue';
-
 </script>
 
 <template>
   <div class="d-flex flex-column flex-md-row p-4 gap-4 py-md-5 align-items-center justify-content-center">
-  <div class="list-group">
-    <StackListItem v-for="key in Object.keys(stacks).sort()" :title="key" :value="stacks[key]"></StackListItem>
+  <div class="list-group" v-if="stacks.connected">
+    <StackListItem v-for="key in Object.keys(stacks.projects).sort()" :title="key" :value="stacks.projects[key]"></StackListItem>
+  </div>
+
+  <div class="alert alert-danger fade show" role="alert" v-else-if="loaded">
+    Failed to connect to Docker host. Please check <router-link class="alert-link" :to="{name: 'config'}">Config</router-link> for errors.
   </div>
 </div>
 </template>

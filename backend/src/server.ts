@@ -1,12 +1,16 @@
 import express, {Express, Request, Response} from 'express';
+import bodyParser from 'body-parser';
 import cors from 'cors';
 
 import {endpoints} from './lib/api';
 import fs from 'fs';
+import {promises as fsPromises} from 'fs';
 import path from 'path';
 import {NodeSSH} from 'node-ssh';
 import {Docker} from './lib/docker';
 import {DockerHub} from './lib/dockerhub';
+
+const config_path = path.join(__dirname, 'config.json');
 
 const config: {
     port: number;
@@ -14,23 +18,33 @@ const config: {
     ssh_username: string;
     ssh_privkey_path: string;
     cors_enabled: boolean;  // for dev server
-} = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json')).toString());
+} = JSON.parse(fs.readFileSync(config_path).toString());
 
 const app: Express = express();
 if (config.cors_enabled) {
     app.use(cors());
 }
-let docker: Docker;
+app.use(bodyParser.json());
+let docker: Docker|null = null;
+
+async function createDockerSshConnection() {
+    docker = null;
+    try {
+        let ssh = new NodeSSH();
+        await ssh.connect({
+            host: config.ssh_host,
+            username: config.ssh_username,
+            privateKeyPath: config.ssh_privkey_path
+        });
+
+        docker = new Docker((command, args) => {return ssh.exec(command, args)});
+    } catch (e: any) {
+        console.log(e);
+    }
+}
 
 (async() => {
-    let ssh = new NodeSSH();
-    await ssh.connect({
-        host: config.ssh_host,
-        username: config.ssh_username,
-        privateKeyPath: config.ssh_privkey_path
-    });
-
-    docker = new Docker((command, args) => {return ssh.exec(command, args)});
+    await createDockerSshConnection();
 
     app.get('/', async (req: Request, res: Response) => {
         res.contentType('html');
@@ -56,16 +70,45 @@ let docker: Docker;
     });
 
     app.get(endpoints.stack_list.url, async (req: Request, res: Response) => {
-        const projects = await docker.getDockerComposeProjects();
-        let data: endpoints.stack_list.type = {};
-        for (const i of projects.keys()) {
-            data[i] = {
-                containers: projects.get(i)!,    //TODO more fields
-                updateAvailable: false //TODO implement
-            };
+        let data: endpoints.stack_list.type = {
+            connected: docker != null,
+            projects: {}
+        };
+
+        if (docker) {
+            const projects = await docker.getDockerComposeProjects();
+
+            for (const i of projects.keys()) {
+                data.projects[i] = {
+                    containers: projects.get(i)!,    //TODO more fields
+                    updateAvailable: false //TODO implement
+                };
+            }
         }
         res.send(data);
-    })
+    });
+
+    app.get(endpoints.config.url, async (req: Request, res: Response) => {
+        res.send(<endpoints.config.type> {
+            port: config.port,
+            ssh_username: config.ssh_username,
+            ssh_host: config.ssh_host,
+            ssh_privkey_path: config.ssh_privkey_path
+        });
+    });
+
+    app.post(endpoints.config.url, async (req: Request, res: Response) => {
+        const data: endpoints.config.type = req.body;
+
+        config.port = data.port;
+        config.ssh_username = data.ssh_username;
+        config.ssh_host = data.ssh_host;
+        config.ssh_privkey_path = data.ssh_privkey_path;
+
+        await fsPromises.writeFile(config_path, JSON.stringify(config, undefined, 4), {flag: 'w'});
+
+        res.sendStatus(200);
+    });
 
     app.get(endpoints.container.url_fmt, async (req: Request, res: Response) => {
         res.contentType('txt');

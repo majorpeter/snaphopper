@@ -3,7 +3,7 @@ import { endpoints } from '@api';
 
 const props = defineProps<{
     title: string,
-    value: endpoints.stack_list.type['']
+    value: endpoints.stack_list.type['projects']['']
 }>();
 </script>
 

@@ -2,10 +2,22 @@ export namespace endpoints {
     export namespace stack_list {
         export const url = '/stacks';
         export interface type {
-            [key: string]: {
-                containers: string[];
-                updateAvailable: boolean;
+            connected: boolean;
+            projects: {[key: string]: {
+                    containers: string[];
+                    updateAvailable: boolean;
+                }
             };
+        };
+    }
+
+    export namespace config {
+        export const url = '/config';
+        export interface type {
+            port: number;
+            ssh_host: string;
+            ssh_username: string;
+            ssh_privkey_path: string;
         };
     }
 
