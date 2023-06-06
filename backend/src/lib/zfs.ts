@@ -34,13 +34,15 @@ export class Zfs {
             referenced: string;
         }[] = [];
         const output = await this._exec('sudo', ['zfs', 'list', '-H', '-o', 'name,used,referenced', '-t', 'snapshot', dataset]);
-        for (const line of output.split('\n')) {
-            const parts = line.split('\t');
-            result.push({
-                name: parts[0].split('@')[1],
-                used: parts[1],
-                referenced: parts[2]
-            })
+        if (output.length > 0) {
+            for (const line of output.split('\n')) {
+                const parts = line.split('\t');
+                result.push({
+                    name: parts[0].split('@')[1],
+                    used: parts[1],
+                    referenced: parts[2]
+                })
+            }
         }
         return result;
     }
