@@ -10,10 +10,34 @@ export namespace endpoints {
                         image_name: string;
                         image_hash: string;
                     }[];
-                    updateAvailable: boolean;
+                    //TODO updateAvailable: boolean;
                 }
             };
         };
+    }
+
+    export namespace stack {
+        export const url = '/stack/:name';
+
+        export interface type {
+            containers: {
+                name: string;
+                service: string;
+                image: {
+                    name: string;
+                    hash: string;
+                    url: string|null;
+                };
+                state: string;
+            }[];
+            working_directory: string;
+            compose_config_file: string;
+            working_directory_error: boolean;
+        };
+
+        export namespace docker_compose_file {
+            export const url = "/stack/:name/compose";
+        }
     }
 
     export namespace config {

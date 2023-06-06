@@ -26,6 +26,12 @@ export interface ContainerInfo {
         Labels: {[key: string]: string};
     };
     Name: string;
+    Mounts: [{
+        Type: string;
+        Source: string;
+        Destination: string;
+        RW: boolean;
+    }]
 };
 
 export class Docker {
@@ -81,8 +87,15 @@ export class Docker {
         return result;
     }
 
-    async getDockerComposeFile(containerName: string): Promise<string> {
-        const data = await this.inspectContainers([containerName]);
-        return this._exec('cat', [path.join(data[0].Config.Labels[Docker.workingDirLabel], data[0].Config.Labels[Docker.configFileNameLabel])]);
+    async getDockerComposeFile(composeProjectName: string): Promise<string|null> {
+        const containers = await this.getContainers();
+        const container_data = await this.inspectContainers(containers);
+
+        for (const data of container_data) {
+            if (data.Config.Labels[Docker.projectLabel] == composeProjectName) {
+                return this._exec('cat', [path.join(data.Config.Labels[Docker.workingDirLabel], data.Config.Labels[Docker.configFileNameLabel])]);
+            }
+        }
+        return null;
     }
 };

@@ -9,6 +9,7 @@ import path from 'path';
 import {NodeSSH} from 'node-ssh';
 import {Docker} from './lib/docker';
 import {DockerHub} from './lib/dockerhub';
+import { validateHeaderName } from 'http';
 
 const config_path = path.join(__dirname, 'config.json');
 
@@ -46,29 +47,6 @@ async function createDockerSshConnection() {
 (async() => {
     await createDockerSshConnection();
 
-    app.get('/', async (req: Request, res: Response) => {
-        res.contentType('html');
-        const projects = await docker.getDockerComposeProjects();
-        const project_names = new Array(...projects.keys()).sort();
-        for (const i of project_names) {
-            res.write(i+'<br/>');
-            for (const j of <string[]> projects.get(i)) {
-                const image = (await docker.inspectImages([(await docker.inspectContainers([j]))[0].Image]))[0];
-                const custom = image.Metadata.LastTagTime != '0001-01-01T00:00:00Z';
-                const tag = image.RepoTags[0];
-                res.write(`&nbsp;&nbsp;-<a href="${endpoints.container.url_fmt.replace(':name', j)}">${j}</a> - `);
-                if (!custom) {
-                    res.write(`<a href="${DockerHub.getUrl(tag.split(':')[0])}" target="blank">${tag}</a>`);
-                } else {
-                    res.write(`${tag} <b>(custom)</b>`);
-                }
-                res.write('<br/>');
-            }
-            res.write('\n');
-        }
-        res.end();
-    });
-
     app.get(endpoints.stack_list.url, async (req: Request, res: Response) => {
         let data: endpoints.stack_list.type = {
             connected: docker != null,
@@ -88,11 +66,58 @@ async function createDockerSshConnection() {
                             image_hash: value.Image
                         };
                     }),    //TODO more fields
-                    updateAvailable: false //TODO implement
                 };
             }
         }
         res.send(data);
+    });
+
+    app.get(endpoints.stack.url, async (req: Request, res: Response) => {
+        if (docker) {
+            const projects = await docker.getDockerComposeProjects();
+            if (req.params.name in projects) {
+                const stack = projects[req.params.name];
+                const working_dir_set = new Set(stack.map((value) => value.Config.Labels[Docker.workingDirLabel]));
+                const compose_config_file_set = new Set(stack.map((value) => value.Config.Labels[Docker.configFileNameLabel]));
+
+                let data: endpoints.stack.type = {
+                    containers: [],
+                    working_directory: working_dir_set.values().next().value,
+                    compose_config_file: compose_config_file_set.values().next().value,
+                    working_directory_error: (working_dir_set.size != 1) || (compose_config_file_set.size != 1)
+                };
+                for (const value of stack) {
+                    const image = (await docker.inspectImages([value.Image]))[0];
+                    const custom = image.Metadata.LastTagTime != '0001-01-01T00:00:00Z'
+
+                    data.containers.push({
+                        name: value.Name.replace(/^\//,''),
+                        service: value.Config.Labels[Docker.serviceNameLabel],
+                        image: {
+                            name: value.Config.Image,
+                            hash: value.Image,
+                            url: custom ? null : DockerHub.getUrl(value.Config.Image.split(':')[0])
+                        },
+                        state: value.State.Status
+                    });
+                }
+
+                res.send(data);
+            } else {
+                res.sendStatus(404);
+            }
+        } else {
+            res.sendStatus(500);
+        }
+    });
+
+    app.get(endpoints.stack.docker_compose_file.url,async (req: Request, res: Response) => {
+        if (docker) {
+            res.contentType('yaml');
+            res.send(await docker.getDockerComposeFile(req.params.name));
+        } else {
+            res.sendStatus(500);
+        }
     });
 
     app.get(endpoints.config.url, async (req: Request, res: Response) => {
