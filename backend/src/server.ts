@@ -105,7 +105,8 @@ async function createSshConnectionServices() {
 
                 for (const value of stack) {
                     const image = (await docker.inspectImages([value.Image]))[0];
-                    const custom = image.Metadata.LastTagTime != '0001-01-01T00:00:00Z'
+                    const custom = Docker.isCustomImage(image);
+                    const base = custom ? await docker.extractBaseForCustomImage(image) : null;
 
                     data.containers.push({
                         name: value.Name.replace(/^\//,''),
@@ -113,7 +114,9 @@ async function createSshConnectionServices() {
                         image: {
                             name: value.Config.Image,
                             hash: value.Image,
-                            url: custom ? null : DockerHub.getUrl(value.Config.Image.split(':')[0])
+                            url: custom ? null : DockerHub.getUrl(value.Config.Image.split(':')[0]),
+                            base: base,
+                            base_url: base ? DockerHub.getUrl(base!.split(':')[0]) : null
                         },
                         state: value.State.Status
                     });

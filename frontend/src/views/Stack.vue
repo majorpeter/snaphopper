@@ -44,7 +44,10 @@
     <td>{{ i.name }}</td>
     <td :title="i.image.hash">
         <a v-if="i.image.url" :href="i.image.url" target="_blank">{{ i.image.name }}</a>
-        <p v-else>{{ i.image.name }} <strong>(custom)</strong></p>
+        <p v-else>
+            {{ i.image.name }} <strong>(custom)</strong><br/>
+            <strong>based on</strong> <a :href="i.image.base_url!" target="_blank">{{ i.image.base }}</a>
+        </p>
     </td>
     <td>{{ i.state }}</td>
 </tr></tbody></table>

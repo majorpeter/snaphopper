@@ -34,6 +34,17 @@ export interface ContainerInfo {
     }]
 };
 
+export interface ImageInfo {
+    Id: string;
+    RepoTags: string[];
+    RepoDigests: string[];
+    Created: string; //time
+    Metadata: {
+        LastTagTime: string;
+    },
+    Parent: string;
+};
+
 export class Docker {
     _exec: exec;
 
@@ -58,15 +69,7 @@ export class Docker {
         return JSON.parse(await this._exec('docker', ['container', 'inspect', ...names]));
     }
 
-    async inspectImages(names: string[]): Promise<[{
-        Id: string;
-        RepoTags: string[];
-        RepoDigests: string[];
-        Created: string; //time
-        Metadata: {
-            LastTagTime: string;
-        }
-    }]> {
+    async inspectImages(names: string[]): Promise<[ImageInfo]> {
         return JSON.parse(await this._exec('docker', ['image', 'inspect', ...names]));
     }
 
@@ -97,5 +100,20 @@ export class Docker {
             }
         }
         return null;
+    }
+
+    async extractBaseForCustomImage(image: ImageInfo): Promise<string|null> {
+        while (image.Parent) {
+            image = (await this.inspectImages([image.Parent]))[0];
+        }
+        if (image.RepoTags.length > 0) {
+            return image.RepoTags[0];
+        }
+
+        return null;
+    }
+
+    static isCustomImage(image: ImageInfo): boolean {
+        return image.Metadata.LastTagTime != '0001-01-01T00:00:00Z'
     }
 };

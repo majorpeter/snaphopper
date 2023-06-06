@@ -27,6 +27,8 @@ export namespace endpoints {
                     name: string;
                     hash: string;
                     url: string|null;
+                    base: string|null;
+                    base_url: string|null;
                 };
                 state: string;
             }[];
