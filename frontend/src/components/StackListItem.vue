@@ -8,8 +8,10 @@ const props = defineProps<{
 </script>
 
 <template>
-    <router-link :to="{name: 'stack', params: {name: name}}" class="list-group-item list-group-item-action d-flex gap-3 py-3" aria-current="false">
-      <img src="https://github.com/docker.png" width="32" height="32" class="flex-shrink-0">
+    <router-link :to="{name: 'stack', params: {name: name}}" @click="navigatingAway=true" class="list-group-item list-group-item-action d-flex gap-3 py-3" aria-current="false">
+      <img v-if="!navigatingAway" src="@/svg/multiple-layers-icon.svg" class="stack-item-icon flex-shrink-0"/>
+      <div v-else class="stack-item-icon spinner-border"></div>
+
       <div class="gap-2 w-100 justify-content-between">
           <h6 class="mb-0 "><strong>{{ name }}</strong></h6>
           <div>
@@ -30,5 +32,17 @@ const props = defineProps<{
 import { defineComponent } from 'vue';
 
 export default defineComponent({
+  data() {
+    return {
+      navigatingAway: false
+    };
+  }
 });
 </script>
+
+<style scoped>
+.stack-item-icon {
+  width: 32px;
+  height: 32px;
+}
+</style>

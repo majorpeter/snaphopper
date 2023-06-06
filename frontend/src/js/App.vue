@@ -21,3 +21,10 @@ export default defineComponent({
     }
 });
 </script>
+
+<style>
+h2 > img {
+    height: 48px;
+    margin-right: 10px;
+}
+</style>

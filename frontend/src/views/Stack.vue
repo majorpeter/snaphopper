@@ -1,5 +1,5 @@
 <template>
-<h2>{{ name }}</h2>
+<h2><img src="@/svg/multiple-layers-icon.svg" class="d-inline-block align-middle"/> {{ name }}</h2>
 
 <h3>Services</h3>
 
@@ -95,17 +95,27 @@ export default defineComponent({
         }
     },
     methods: {
+        setData(_data: typeof this.data) {
+            this.data = _data;
+        },
         async showComposeFile() {
             this.compose_file = (await axios.get(API_PREFIX + endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
         }
     },
-    async created() {
-        this.data = (await axios.get(API_PREFIX + endpoints.stack.url.replace(':name', <string> this.name))).data;
+    async beforeRouteEnter(to, from, next) {
+        let promise = axios.get(API_PREFIX + endpoints.stack.url.replace(':name', <string> to.params.name));
+
+        const navigatingFromOtherPage = (from.name !== undefined);
+        if (navigatingFromOtherPage) {
+            await promise;  // only block navigating if we're navigating, skip for refreshing/direct link
+        }
+
+        next(async (vm: any) => vm.setData((await promise).data));
     }
 });
 </script>
 
-<style>
+<style scoped>
 textarea#composeFileYaml {
     height: 400px;
     font-family: monospace;

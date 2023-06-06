@@ -1,4 +1,6 @@
 <template>
+    <h2><img src="@/svg/operations-icon.svg" class="d-inline-block align-middle"/> Configuration</h2>
+
     <form @submit.prevent="submit">
         <div class="alert alert-success alert-dismissible fade show" role="alert" v-if="saved">
           Configuration successfully saved!
