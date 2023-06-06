@@ -5,7 +5,7 @@ import StackListItem from './StackListItem.vue';
 <template>
   <div class="d-flex flex-column flex-md-row p-4 gap-4 py-md-5 align-items-center justify-content-center">
   <div class="list-group" v-if="stacks.connected">
-    <StackListItem v-for="key in Object.keys(stacks.projects).sort()" :title="key" :value="stacks.projects[key]"></StackListItem>
+    <StackListItem v-for="key in Object.keys(stacks.projects).sort()" :name="key" :value="stacks.projects[key]"></StackListItem>
   </div>
 
   <div class="alert alert-danger fade show" role="alert" v-else-if="loaded">

@@ -2,7 +2,7 @@
     <form @submit.prevent="submit">
         <div class="alert alert-success alert-dismissible fade show" role="alert" v-if="saved">
           Configuration successfully saved!
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @click="saved=false"></button>
+          <button type="button" class="btn-close" aria-label="Close" @click="saved=false"></button>
         </div>
 
         <div class="alert alert-danger show" role="alert" v-if="error">

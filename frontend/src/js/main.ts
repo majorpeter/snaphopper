@@ -8,3 +8,5 @@ import '../scss/styles.scss';
 createApp(App)
 .use(router)
 .mount('#app');
+
+import 'bootstrap/dist/js/bootstrap.js';

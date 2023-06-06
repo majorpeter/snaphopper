@@ -1,9 +1,11 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { RouteRecordRaw, createRouter, createWebHistory } from 'vue-router';
 import Home from '@/views/Home.vue';
+import Stack from '@/views/Stack.vue';
 import Config from '@/views/Config.vue';
 
-const routes = [
-    {path: '/', name: 'home', component: Home},
+const routes: RouteRecordRaw[] = [
+    {path: '/', name: 'home', component: Home, children: []},
+    {path: '/stack/:name', name: 'stack', component: Stack},
     {path: '/config', name: 'config', component: Config}
 ];
 
