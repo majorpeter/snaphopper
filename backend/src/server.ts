@@ -87,12 +87,16 @@ async function createSshConnectionServices() {
                     containers: [],
                     working_directory: working_dir_set.values().next().value,
                     zfs_dataset: null,
+                    zfs_snapshots: [],
                     compose_config_file: compose_config_file_set.values().next().value,
                     working_directory_error: (working_dir_set.size != 1) || (compose_config_file_set.size != 1)
                 };
 
                 if (zfs) {
                     data.zfs_dataset = await zfs.getDataSetByMountPoint(data.working_directory);
+                    if (data.zfs_dataset) {
+                        data.zfs_snapshots = (await zfs.getSnapshots(data.zfs_dataset)).sort((a, b) => (a.name < b.name) ? 1 : -1);
+                    }
                 }
 
                 for (const value of stack) {

@@ -43,18 +43,19 @@
     <td>{{ i.state }}</td>
 </tr></tbody></table>
 
-<h3>Snapshots</h3>
+<h3>Snapshots<span v-if="data.zfs_snapshots"> ({{ data.zfs_snapshots.length }})</span></h3>
 
 <div class="accordion" id="snapshotList" v-if="!data.working_directory_error">
-    <div class="accordion-item" v-for="(data, name) in snapshots">
-    <h4 class="accordion-header" :id="'collapsehead_'+name">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="'#collapse_'+name" aria-expanded="false" :aria-controls="'collapse_'+name">
-        {{ name }}
+    <div class="accordion-item" v-for="(snapshot, i) in data.zfs_snapshots">
+    <h4 class="accordion-header" :id="'collapsehead_'+i">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="'#collapse_'+i" aria-expanded="false" :aria-controls="'collapse_'+i">
+        {{ snapshot.name }}
         </button>
     </h4>
-    <div :id="'collapse_'+name" class="accordion-collapse collapse" :aria-labelledby="'collapsehead_'+name" data-bs-parent="#snapshotList">
+    <div :id="'collapse_'+i" class="accordion-collapse collapse" :aria-labelledby="'collapsehead_'+i" data-bs-parent="#snapshotList">
         <div class="accordion-body">
-        Todo: <strong>details, actions</strong>
+        <p>Used: <strong>{{ snapshot.used }}</strong></p>
+        <p>Referenced: <strong>{{ snapshot.referenced }}</strong></p>
         </div>
     </div>
     </div>
@@ -91,12 +92,6 @@ export default defineComponent({
             name: this.$route.params.name,
             data: <endpoints.stack.type> {},
             compose_file: <string|null> null,
-            snapshots: {
-                'auto-2023-06-06': {},
-                'auto-2023-06-05': {},
-                'auto-2023-06-04': {},
-                'auto-2023-06-03': {}
-            }
         }
     },
     methods: {

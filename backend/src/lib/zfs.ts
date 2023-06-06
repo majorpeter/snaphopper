@@ -2,6 +2,7 @@ export type exec = (command: string, args: string[]) => Promise<string>;
 
 export class Zfs {
     _exec: exec;
+
     constructor(exec: exec) {
         this._exec = exec;
     }
@@ -20,5 +21,27 @@ export class Zfs {
         const mountPoints = await this.getMountPoints();
         const match = Object.entries(mountPoints).find((value) => value[1] == mountPoint);
         return match ? match[0] : null;
+    }
+
+    async getSnapshots(dataset: string): Promise<{
+        name: string;
+        used: string;
+        referenced: string;
+    }[]> {
+        let result: {
+            name: string;
+            used: string;
+            referenced: string;
+        }[] = [];
+        const output = await this._exec('sudo', ['zfs', 'list', '-H', '-o', 'name,used,referenced', '-t', 'snapshot', dataset]);
+        for (const line of output.split('\n')) {
+            const parts = line.split('\t');
+            result.push({
+                name: parts[0].split('@')[1],
+                used: parts[1],
+                referenced: parts[2]
+            })
+        }
+        return result;
     }
 };
