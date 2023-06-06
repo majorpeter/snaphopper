@@ -32,6 +32,7 @@ export namespace endpoints {
             }[];
             working_directory: string;
             compose_config_file: string;
+            zfs_dataset: string|null;
             working_directory_error: boolean;
         };
 

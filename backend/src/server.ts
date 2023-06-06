@@ -10,6 +10,7 @@ import {NodeSSH} from 'node-ssh';
 import {Docker} from './lib/docker';
 import {DockerHub} from './lib/dockerhub';
 import { validateHeaderName } from 'http';
+import { Zfs } from './lib/zfs';
 
 const config_path = path.join(__dirname, 'config.json');
 
@@ -27,8 +28,9 @@ if (config.cors_enabled) {
 }
 app.use(bodyParser.json());
 let docker: Docker|null = null;
+let zfs: Zfs|null = null;
 
-async function createDockerSshConnection() {
+async function createSshConnectionServices() {
     docker = null;
     try {
         let ssh = new NodeSSH();
@@ -39,13 +41,14 @@ async function createDockerSshConnection() {
         });
 
         docker = new Docker((command, args) => {return ssh.exec(command, args)});
+        zfs = new Zfs((command, args) => {return ssh.exec(command, args)});
     } catch (e: any) {
         console.log(e);
     }
 }
 
 (async() => {
-    await createDockerSshConnection();
+    await createSshConnectionServices();
 
     app.get(endpoints.stack_list.url, async (req: Request, res: Response) => {
         let data: endpoints.stack_list.type = {
@@ -83,9 +86,15 @@ async function createDockerSshConnection() {
                 let data: endpoints.stack.type = {
                     containers: [],
                     working_directory: working_dir_set.values().next().value,
+                    zfs_dataset: null,
                     compose_config_file: compose_config_file_set.values().next().value,
                     working_directory_error: (working_dir_set.size != 1) || (compose_config_file_set.size != 1)
                 };
+
+                if (zfs) {
+                    data.zfs_dataset = await zfs.getDataSetByMountPoint(data.working_directory);
+                }
+
                 for (const value of stack) {
                     const image = (await docker.inspectImages([value.Image]))[0];
                     const custom = image.Metadata.LastTagTime != '0001-01-01T00:00:00Z'

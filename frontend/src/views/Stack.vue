@@ -8,20 +8,23 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
-<table class="table w-auto mb-3" v-if="data.containers"><tbody>
+<table class="table w-auto mb-3"><tbody>
     <tr>
         <th>Docker-compose working dir:</th>
         <td><code>{{ data.working_directory }}</code></td>
     </tr><tr>
         <th>Docker-compose file:</th>
-        <td>
+        <td v-if="data.compose_config_file">
             <code>{{ data.compose_config_file }}</code>
             &nbsp;
             <button type="button" class="btn btn-primary" @click="showComposeFile" data-bs-toggle="modal" data-bs-target="#composeFileModal">Show</button>
         </td>
     </tr><tr>
+        <th>ZFS Dataset:</th>
+        <td><code>{{ data.zfs_dataset }}</code></td>
+    </tr><tr>
         <th>Services count:</th>
-        <td>{{ data.containers.length }}</td>
+        <td v-if="data.containers">{{ data.containers.length }}</td>
     </tr>
 </tbody></table>
 
