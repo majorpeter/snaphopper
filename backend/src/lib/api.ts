@@ -40,11 +40,6 @@ export namespace endpoints {
                 used: string;
                 referenced: string;
             };
-            zfs_snapshots: {
-                name: string;
-                used: string;
-                referenced: string;
-            }[];
             working_directory_error: boolean;
         };
 
@@ -54,15 +49,27 @@ export namespace endpoints {
     }
 
     export namespace snapshot {
+        export namespace list {
+            export const url = '/api/snapshot/list';
+            export interface req_type {
+                dataset: string;
+            };
+            export type resp_type = {
+                name: string;
+                used: string;
+                referenced: string;
+            }[];
+        }
+
         export namespace create {
             export const url = '/api/snapshot/create';
 
-            export interface type {
+            export interface req_type {
                 dataset: string;
                 name: string;
             }
 
-            export interface response_type {
+            export interface error_resp_type {
                 message: string;
             }
         }

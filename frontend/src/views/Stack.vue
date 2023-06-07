@@ -66,12 +66,12 @@
 <template v-if="data.zfs_available && data.zfs_dataset">
 <h3>
     Snapshots
-    <span v-if="data.zfs_snapshots"> ({{ data.zfs_snapshots.length }})</span>
+    <span v-if="zfs_snapshots"> ({{ zfs_snapshots.length }})</span>
     <button type="button" @click="showSnapshotCreateDialog" class="btn btn-primary float-end">Create</button>
 </h3>
 
 <div class="accordion" id="snapshotList" v-if="!data.working_directory_error">
-    <div class="accordion-item" v-for="(snapshot, i) in data.zfs_snapshots">
+    <div class="accordion-item" v-for="(snapshot, i) in zfs_snapshots">
     <h4 class="accordion-header" :id="'collapsehead_'+i">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="'#collapse_'+i" aria-expanded="false" :aria-controls="'collapse_'+i">
         {{ snapshot.name }}
@@ -154,6 +154,7 @@ export default defineComponent({
         return {
             name: this.$route.params.name,
             data: <endpoints.stack.type> {},
+            zfs_snapshots: <endpoints.snapshot.list.resp_type> [],
             composeFile: {
                 modal: <Modal> {},
                 content: <string|null> null,
@@ -179,6 +180,16 @@ export default defineComponent({
     methods: {
         setData(_data: typeof this.data) {
             this.data = _data;
+            this.updateSnapshots();
+        },
+        updateSnapshots() {
+            if (this.data.zfs_dataset) {
+                axios.get(endpoints.snapshot.list.url, {params: <endpoints.snapshot.list.req_type> {
+                    dataset: this.data.zfs_dataset?.name
+                }}).then((value) => {
+                    this.zfs_snapshots = value.data;
+                });
+            }
         },
         async showComposeFile() {
             this.composeFile.loading = true;
@@ -204,15 +215,16 @@ export default defineComponent({
         async createSnapshotBtnClicked() {
             this.createSnapshot.state = 'creating';
             try {
-                await axios.post(endpoints.snapshot.create.url, <endpoints.snapshot.create.type> {
+                await axios.post(endpoints.snapshot.create.url, <endpoints.snapshot.create.req_type> {
                     dataset: this.createSnapshot.model.dataset,
                     name: this.createSnapshot.model.name
                 });
                 this.createSnapshot.state = 'idle';
                 this.createSnapshot.modal.hide();
-                //TODO fetch snapshots
+
+                this.updateSnapshots();
             } catch (e) {
-                const resp = <endpoints.snapshot.create.error_response_type> (<AxiosError> e).response?.data;
+                const resp = <endpoints.snapshot.create.error_resp_type> (<AxiosError> e).response?.data;
                 this.createSnapshot.error_message = resp.message;
                 this.createSnapshot.state = 'error';
             }

@@ -108,7 +108,6 @@ async function createSshConnectionServices() {
                     working_directory: working_dir_set.values().next().value,
                     zfs_available: zfs != null && zfs.available,
                     zfs_dataset: null,
-                    zfs_snapshots: [],
                     compose_config_file: compose_config_file_set.values().next().value,
                     working_directory_error: (working_dir_set.size != 1) || (compose_config_file_set.size != 1)
                 };
@@ -120,7 +119,6 @@ async function createSshConnectionServices() {
                             name: datasetName,
                             ...await zfs.getDataSetFsUsage(datasetName)
                         }
-                        data.zfs_snapshots = (await zfs.getSnapshots(datasetName)).sort((a, b) => (a.name < b.name) ? 1 : -1);
                     }
                 }
 
@@ -152,7 +150,7 @@ async function createSshConnectionServices() {
         }
     });
 
-    app.get(endpoints.stack.docker_compose_file.url,async (req: Request, res: Response) => {
+    app.get(endpoints.stack.docker_compose_file.url, async (req: Request, res: Response) => {
         if (docker) {
             res.contentType('yaml');
             res.send(await docker.getDockerComposeFile(req.params.name));
@@ -161,12 +159,25 @@ async function createSshConnectionServices() {
         }
     });
 
+    app.get(endpoints.snapshot.list.url, async (req: Request, res: Response) => {
+        const req_data: endpoints.snapshot.list.req_type = {
+            dataset: <string> req.query['dataset']
+        };
+
+        if (typeof(req_data.dataset) == 'string' && zfs && zfs.available) {
+            const resp: endpoints.snapshot.list.resp_type = (await zfs.getSnapshots(req_data.dataset)).sort((a, b) => (a.name < b.name) ? 1 : -1);
+            res.send(resp);
+        } else {
+            res.sendStatus(500);
+        }
+    });
+
     app.post(endpoints.snapshot.create.url, async (req: Request, res: Response) => {
-        const data = <endpoints.snapshot.create.type> req.body;
+        const data = <endpoints.snapshot.create.req_type> req.body;
 
         if (!Zfs.isNameValid(data.name)) {
             res.status(400);
-            res.send(<endpoints.snapshot.create.response_type> {
+            res.send(<endpoints.snapshot.create.error_resp_type> {
                 message: 'Snapshot name is not valid.'
             });
             return;
@@ -174,7 +185,7 @@ async function createSshConnectionServices() {
 
         if (!zfs || !zfs.available) {
             res.status(500);
-            res.send(<endpoints.snapshot.create.response_type> {
+            res.send(<endpoints.snapshot.create.error_resp_type> {
                 message: 'ZFS is not available on host.'
             });
             return;
@@ -185,7 +196,7 @@ async function createSshConnectionServices() {
             res.sendStatus(200);
         } catch (e) {
             res.status(500);
-            res.send(<endpoints.snapshot.create.response_type> {
+            res.send(<endpoints.snapshot.create.error_resp_type> {
                 message: 'ZFS command failed.'
             });
             return;
