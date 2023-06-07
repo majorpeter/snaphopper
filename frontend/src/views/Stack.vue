@@ -149,10 +149,11 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { endpoints } from '@api';
 import { Modal } from 'bootstrap';
 import StackSnapshotClone from './Stack/StackSnapshotClone.vue';
+import ApiClient from '@/services/ApiClient';
 
 export default defineComponent({
     components: {
@@ -192,7 +193,7 @@ export default defineComponent({
         },
         updateSnapshots() {
             if (this.data.zfs_dataset) {
-                axios.get(endpoints.snapshot.list.url, {params: <endpoints.snapshot.list.req_type> {
+                ApiClient().get(endpoints.snapshot.list.url, {params: <endpoints.snapshot.list.req_type> {
                     dataset: this.data.zfs_dataset?.name
                 }}).then((value) => {
                     this.zfs_snapshots = value.data;
@@ -201,7 +202,7 @@ export default defineComponent({
         },
         async showComposeFile() {
             this.composeFile.loading = true;
-            this.composeFile.content = (await axios.get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
+            this.composeFile.content = (await ApiClient().get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
             this.composeFile.loading = false;
 
             this.composeFile.modal.show();
@@ -223,7 +224,7 @@ export default defineComponent({
         async createSnapshotBtnClicked() {
             this.createSnapshot.state = 'creating';
             try {
-                await axios.post(endpoints.snapshot.create.url, <endpoints.snapshot.create.req_type> {
+                await ApiClient().post(endpoints.snapshot.create.url, <endpoints.snapshot.create.req_type> {
                     dataset: this.createSnapshot.model.dataset,
                     name: this.createSnapshot.model.name
                 });
@@ -242,7 +243,7 @@ export default defineComponent({
         }
     },
     async beforeRouteEnter(to, from, next) {
-        let promise = axios.get(endpoints.stack.url.replace(':name', <string> to.params.name));
+        let promise = ApiClient().get(endpoints.stack.url.replace(':name', <string> to.params.name));
 
         const navigatingFromOtherPage = (from.name !== undefined);
         if (navigatingFromOtherPage) {

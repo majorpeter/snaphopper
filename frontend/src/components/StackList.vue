@@ -16,8 +16,8 @@ import StackListItem from './StackListItem.vue';
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import axios from "axios";
 import { endpoints } from '@api';
+import ApiClient from '@/services/ApiClient';
 
 export default defineComponent({
   data() {
@@ -29,7 +29,7 @@ export default defineComponent({
   methods: {
   },
   async created() {
-    this.stacks = (await axios.get(endpoints.stack_list.url)).data;
+    this.stacks = (await ApiClient().get(endpoints.stack_list.url)).data;
     this.loaded = true;
   }
 });

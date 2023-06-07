@@ -43,8 +43,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { Modal } from 'bootstrap';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import { endpoints } from '@api';
+import ApiClient from '@/services/ApiClient';
 
 export default defineComponent({
     mounted() {
@@ -77,7 +78,7 @@ export default defineComponent({
         async onAccepted() {
             this.state = 'cloning';
             try {
-                await axios.post(endpoints.snapshot.clone.url, <endpoints.snapshot.clone.req_type> {
+                await ApiClient().post(endpoints.snapshot.clone.url, <endpoints.snapshot.clone.req_type> {
                     dataset_path: this.datasetName,
                     snapshot_name: this.model.snapshotName,
                     clone_path: this.model.cloneDatasetName

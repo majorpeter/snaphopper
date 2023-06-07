@@ -10,6 +10,7 @@ import {NodeSSH} from 'node-ssh';
 import {Docker} from './lib/docker';
 import {DockerHub} from './lib/dockerhub';
 import { Zfs } from './lib/zfs';
+import { authenticationRequred } from './lib/policies';
 
 const config_path = path.join(__dirname, 'config.json');
 
@@ -69,7 +70,7 @@ async function createSshConnectionServices() {
 (async() => {
     await createSshConnectionServices();
 
-    app.get(endpoints.stack_list.url, async (req: Request, res: Response) => {
+    app.get(endpoints.stack_list.url, authenticationRequred, async (req: Request, res: Response) => {
         let data: endpoints.stack_list.type = {
             connected: docker != null,
             projects: {}
@@ -94,7 +95,7 @@ async function createSshConnectionServices() {
         res.send(data);
     });
 
-    app.get(endpoints.stack.url, async (req: Request, res: Response) => {
+    app.get(endpoints.stack.url, authenticationRequred, async (req: Request, res: Response) => {
         if (docker) {
             const projects = await docker.getDockerComposeProjects();
             if (req.params.name in projects) {
@@ -149,7 +150,7 @@ async function createSshConnectionServices() {
         }
     });
 
-    app.get(endpoints.stack.docker_compose_file.url, async (req: Request, res: Response) => {
+    app.get(endpoints.stack.docker_compose_file.url, authenticationRequred, async (req: Request, res: Response) => {
         if (docker) {
             res.contentType('yaml');
             res.send(await docker.getDockerComposeFile(req.params.name));
@@ -171,7 +172,7 @@ async function createSshConnectionServices() {
         }
     });
 
-    app.post(endpoints.snapshot.create.url, async (req: Request, res: Response) => {
+    app.post(endpoints.snapshot.create.url, authenticationRequred, async (req: Request, res: Response) => {
         const data = <endpoints.snapshot.create.req_type> req.body;
 
         if (!Zfs.isPathValid(data.dataset)) {
@@ -209,7 +210,7 @@ async function createSshConnectionServices() {
         }
     });
 
-    app.post(endpoints.snapshot.clone.url, async (req: Request, res: Response) => {
+    app.post(endpoints.snapshot.clone.url, authenticationRequred, async (req: Request, res: Response) => {
         const data = <endpoints.snapshot.clone.req_type> req.body;
 
         if (!Zfs.isPathValid(data.dataset_path)) {
@@ -255,7 +256,7 @@ async function createSshConnectionServices() {
         }
     });
 
-    app.get(endpoints.config.url, async (req: Request, res: Response) => {
+    app.get(endpoints.config.url, authenticationRequred, async (req: Request, res: Response) => {
         res.send(<endpoints.config.type> {
             port: config.port,
             ssh_username: config.ssh_username,
@@ -264,7 +265,7 @@ async function createSshConnectionServices() {
         });
     });
 
-    app.post(endpoints.config.url, async (req: Request, res: Response) => {
+    app.post(endpoints.config.url, authenticationRequred, async (req: Request, res: Response) => {
         const data: endpoints.config.type = req.body;
         const portChanged = config.port != data.port;
 
@@ -288,23 +289,5 @@ async function createSshConnectionServices() {
         await createSshConnectionServices();
 
         res.sendStatus(200);
-    });
-
-    app.get(endpoints.container.url_fmt, async (req: Request, res: Response) => {
-        res.contentType('txt');
-        const containerName = req.params['name'];
-        if (!Docker.isContainerNameValid(containerName)) {
-            res.sendStatus(403);
-            return;
-        }
-
-        if (docker) {
-            const containerData = await docker.inspectContainers([containerName]);
-            const imageData = await docker?.inspectImages([containerData[0].Image]);
-
-            res.send((await DockerHub.getImageTags(imageData[0].RepoTags[0].split(':')[0])).reverse());
-        } else {
-            res.sendStatus(500);
-        }
     });
 })();
