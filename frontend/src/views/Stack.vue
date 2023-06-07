@@ -17,7 +17,10 @@
         <td v-if="data.compose_config_file">
             <code>{{ data.compose_config_file }}</code>
             &nbsp;
-            <button type="button" class="btn btn-primary" @click="showComposeFile" data-bs-toggle="modal" data-bs-target="#composeFileModal">Show</button>
+            <button type="button" class="btn btn-primary" @click="showComposeFile" :disabled="composeFile.loading">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="composeFile.loading"></span>
+                Show
+            </button>
         </td>
     </tr><tr>
         <th>ZFS Dataset:</th>
@@ -61,7 +64,11 @@
 </tr></tbody></table></div>
 
 <template v-if="data.zfs_available && data.zfs_dataset">
-<h3>Snapshots<span v-if="data.zfs_snapshots"> ({{ data.zfs_snapshots.length }})</span></h3>
+<h3>
+    Snapshots
+    <span v-if="data.zfs_snapshots"> ({{ data.zfs_snapshots.length }})</span>
+    <button type="button" @click="showSnapshotCreateDialog" class="btn btn-primary float-end">Create</button>
+</h3>
 
 <div class="accordion" id="snapshotList" v-if="!data.working_directory_error">
     <div class="accordion-item" v-for="(snapshot, i) in data.zfs_snapshots">
@@ -80,6 +87,7 @@
 </div>
 </template>
 
+<!-- Modal for docker-compose file display -->
 <div class="modal modal-lg fade" id="composeFileModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -88,10 +96,46 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea class="form-control" readonly id="composeFileYaml">{{ compose_file }}</textarea>
+        <textarea class="form-control" readonly id="composeFileYaml">{{ composeFile.content }}</textarea>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for snapshot creation -->
+<div class="modal fade" id="snapshotCreateModal" ref="snapshotCreateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create new Snapshot</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" :disabled="createSnapshot.state=='creating'"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger fade show" role="alert" v-if="createSnapshot.state=='error'">
+            Failed to create snapshot:
+            <ul><li>{{ createSnapshot.error_message }}</li></ul>
+        </div>
+
+        <form>
+          <div class="mb-3">
+            <label for="snapshotCreateModalDataset" class="col-form-label">Dataset:</label>
+            <input type="text" class="form-control" id="snapshotCreateModalDataset" readonly v-model="createSnapshot.model.dataset"/>
+          </div>
+          <div class="mb-3">
+            <label for="snapshotCreateModalName" class="col-form-label">Snapshot name:</label>
+            <input class="form-control" id="snapshotCreateModalName" v-model="createSnapshot.model.name" :readonly="createSnapshot.state=='creating'"/>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" :disabled="createSnapshot.state=='creating'">Close</button>
+        <button type="button" class="btn btn-primary" @click="createSnapshotBtnClicked" :disabled="createSnapshot.state=='creating'">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="createSnapshot.state=='creating'"></span>
+            Create
+        </button>
       </div>
     </div>
   </div>
@@ -101,23 +145,77 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { endpoints } from '@api';
+import { Modal } from 'bootstrap';
 
 export default defineComponent({
     data() {
         return {
             name: this.$route.params.name,
             data: <endpoints.stack.type> {},
-            compose_file: <string|null> null,
+            composeFile: {
+                modal: <Modal> {},
+                content: <string|null> null,
+                loading: false
+            },
+            createSnapshot: {
+                modal: <Modal> {},
+                model: {
+                    dataset: '',
+                    name: ''
+                },
+                state: <'idle'|'creating'|'error'> 'idle',
+                error_message: ''
+            }
         }
+    },
+    mounted() {
+        this.composeFile.modal = new Modal(<Element> document.getElementById('composeFileModal'));
+        this.createSnapshot.modal = new Modal(<Element> document.getElementById('snapshotCreateModal'), {
+            backdrop: 'static'
+        });
     },
     methods: {
         setData(_data: typeof this.data) {
             this.data = _data;
         },
         async showComposeFile() {
-            this.compose_file = (await axios.get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
+            this.composeFile.loading = true;
+            this.composeFile.content = (await axios.get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
+            this.composeFile.loading = false;
+
+            this.composeFile.modal.show();
+        },
+        showSnapshotCreateDialog() {
+            // TODO get suggestion from backend
+            const now = new Date();
+            const isoStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString();
+            const date = isoStr.split('T')[0];
+            const time = isoStr.split('T')[1].split(':');
+
+            this.createSnapshot.model = {
+                dataset: this.data.zfs_dataset!.name,
+                name: `manual-${date}_${time[0]}-${time[1]}`
+            }
+
+            this.createSnapshot.modal.show();
+        },
+        async createSnapshotBtnClicked() {
+            this.createSnapshot.state = 'creating';
+            try {
+                await axios.post(endpoints.snapshot.create.url, <endpoints.snapshot.create.type> {
+                    dataset: this.createSnapshot.model.dataset,
+                    name: this.createSnapshot.model.name
+                });
+                this.createSnapshot.state = 'idle';
+                this.createSnapshot.modal.hide();
+                //TODO fetch snapshots
+            } catch (e) {
+                const resp = <endpoints.snapshot.create.error_response_type> (<AxiosError> e).response?.data;
+                this.createSnapshot.error_message = resp.message;
+                this.createSnapshot.state = 'error';
+            }
         }
     },
     async beforeRouteEnter(to, from, next) {

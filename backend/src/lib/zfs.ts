@@ -68,4 +68,17 @@ export class Zfs {
         }
         return result;
     }
+
+    async createSnapshot(dataset: string, snapshotName: string) {
+        const output = await this.#exec('sudo', ['zfs', 'snapshot', dataset + '@' + snapshotName]);
+        console.log(output);
+    }
+
+    /**
+     * @see https://docs.oracle.com/cd/E19253-01/819-5461/gbcpt/index.html
+     */
+    static isNameValid(name: string): boolean {
+        const pattern = RegExp(/^([a-zA-Z0-9_\-\.])+$/);
+        return Boolean(name.match(pattern));
+    }
 };

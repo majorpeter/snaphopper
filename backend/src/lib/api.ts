@@ -53,6 +53,21 @@ export namespace endpoints {
         }
     }
 
+    export namespace snapshot {
+        export namespace create {
+            export const url = '/api/snapshot/create';
+
+            export interface type {
+                dataset: string;
+                name: string;
+            }
+
+            export interface response_type {
+                message: string;
+            }
+        }
+    }
+
     export namespace config {
         export const url = '/api/config';
         export interface type {

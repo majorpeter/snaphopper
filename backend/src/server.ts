@@ -161,6 +161,37 @@ async function createSshConnectionServices() {
         }
     });
 
+    app.post(endpoints.snapshot.create.url, async (req: Request, res: Response) => {
+        const data = <endpoints.snapshot.create.type> req.body;
+
+        if (!Zfs.isNameValid(data.name)) {
+            res.status(400);
+            res.send(<endpoints.snapshot.create.response_type> {
+                message: 'Snapshot name is not valid.'
+            });
+            return;
+        }
+
+        if (!zfs || !zfs.available) {
+            res.status(500);
+            res.send(<endpoints.snapshot.create.response_type> {
+                message: 'ZFS is not available on host.'
+            });
+            return;
+        }
+
+        try {
+            await zfs.createSnapshot(data.dataset, data.name);
+            res.sendStatus(200);
+        } catch (e) {
+            res.status(500);
+            res.send(<endpoints.snapshot.create.response_type> {
+                message: 'ZFS command failed.'
+            });
+            return;
+        }
+    });
+
     app.get(endpoints.config.url, async (req: Request, res: Response) => {
         res.send(<endpoints.config.type> {
             port: config.port,
