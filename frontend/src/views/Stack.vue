@@ -8,7 +8,7 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
-<table class="table w-auto mb-3"><tbody>
+<div class="mb-5"><table class="table w-auto"><tbody>
     <tr>
         <th>Docker-compose working dir:</th>
         <td><code>{{ data.working_directory }}</code></td>
@@ -22,8 +22,10 @@
     </tr><tr>
         <th>ZFS Dataset:</th>
         <td>
-            <code v-if="data.zfs_dataset">{{ data.zfs_dataset?.name }}</code>
-            <template v-if="!data.zfs_available">
+            <template v-if="data.zfs_available">
+                <code v-if="data.zfs_dataset">{{ data.zfs_dataset?.name }}</code>
+                <template v-else><span class="badge rounded-pill bg-danger">Error</span> Not in a separate dataset. Snapshotting is not available.</template>
+            </template><template v-else>
                 <span class="badge rounded-pill text-bg-warning">Unavailable</span>
                 Cannot use ZFS functionality on host.
             </template>
@@ -38,9 +40,9 @@
         <th>Services count:</th>
         <td v-if="data.containers">{{ data.containers.length }}</td>
     </tr>
-</tbody></table>
+</tbody></table></div>
 
-<table class="table table-hover"><thead><tr>
+<div class="mb-5"><table class="table table-hover"><thead><tr>
     <th>Service</th>
     <th>Container name</th>
     <th>Image</th>
@@ -52,12 +54,13 @@
         <a v-if="i.image.url" :href="i.image.url" target="_blank">{{ i.image.name }}</a>
         <p v-else>
             {{ i.image.name }} <strong>(custom)</strong><br/>
-            <strong>based on</strong> <a :href="i.image.base_url!" target="_blank">{{ i.image.base }}</a>
+            <strong>from</strong> <a :href="i.image.base_url!" target="_blank">{{ i.image.base }}</a>
         </p>
     </td>
     <td>{{ i.state }}</td>
-</tr></tbody></table>
+</tr></tbody></table></div>
 
+<template v-if="data.zfs_available && data.zfs_dataset">
 <h3>Snapshots<span v-if="data.zfs_snapshots"> ({{ data.zfs_snapshots.length }})</span></h3>
 
 <div class="accordion" id="snapshotList" v-if="!data.working_directory_error">
@@ -75,6 +78,7 @@
     </div>
     </div>
 </div>
+</template>
 
 <div class="modal modal-lg fade" id="composeFileModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
