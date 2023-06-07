@@ -11,7 +11,7 @@
             <li class="nav-item">
                 <router-link :to="{name: 'config'}" class="nav-link">Config</router-link>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" v-if="$store.state.isLoggedIn">
                 <!--TODO-->
                 <a href="/logout" class="nav-link">Logout</a>
             </li>

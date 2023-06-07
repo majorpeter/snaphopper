@@ -9,7 +9,6 @@ import path from 'path';
 import {NodeSSH} from 'node-ssh';
 import {Docker} from './lib/docker';
 import {DockerHub} from './lib/dockerhub';
-import { validateHeaderName } from 'http';
 import { Zfs } from './lib/zfs';
 
 const config_path = path.join(__dirname, 'config.json');
