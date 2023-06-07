@@ -22,7 +22,7 @@ let config: {
     cors_enabled: boolean;  // for dev server
 } = {
     port: 8080,
-    cors_enabled: true //TODO change default
+    cors_enabled: false
 };
 
 try {
@@ -36,6 +36,8 @@ if (config.cors_enabled) {
     app.use(cors());
 }
 app.use(bodyParser.json());
+app.use(express.static(path.resolve(__dirname, '../../frontend/dist')));
+
 let docker: Docker|null = null;
 let zfs: Zfs|null = null;
 

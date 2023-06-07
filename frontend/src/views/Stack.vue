@@ -98,7 +98,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import axios from "axios";
-import { API_PREFIX } from '../js/util';
 import { endpoints } from '@api';
 
 export default defineComponent({
@@ -114,11 +113,11 @@ export default defineComponent({
             this.data = _data;
         },
         async showComposeFile() {
-            this.compose_file = (await axios.get(API_PREFIX + endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
+            this.compose_file = (await axios.get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
         }
     },
     async beforeRouteEnter(to, from, next) {
-        let promise = axios.get(API_PREFIX + endpoints.stack.url.replace(':name', <string> to.params.name));
+        let promise = axios.get(endpoints.stack.url.replace(':name', <string> to.params.name));
 
         const navigatingFromOtherPage = (from.name !== undefined);
         if (navigatingFromOtherPage) {

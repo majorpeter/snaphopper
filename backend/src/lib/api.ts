@@ -1,6 +1,6 @@
 export namespace endpoints {
     export namespace stack_list {
-        export const url = '/stacks';
+        export const url = '/api/stacks';
         export interface type {
             connected: boolean;
             projects: {[key: string]: {
@@ -17,7 +17,7 @@ export namespace endpoints {
     }
 
     export namespace stack {
-        export const url = '/stack/:name';
+        export const url = '/api/stack/:name';
 
         export interface type {
             containers: {
@@ -49,12 +49,12 @@ export namespace endpoints {
         };
 
         export namespace docker_compose_file {
-            export const url = "/stack/:name/compose";
+            export const url = "/api/stack/:name/compose";
         }
     }
 
     export namespace config {
-        export const url = '/config';
+        export const url = '/api/config';
         export interface type {
             port: number;
             ssh_host: string;
@@ -65,6 +65,6 @@ export namespace endpoints {
     }
 
     export namespace container {
-        export const url_fmt = '/container/:name';
+        export const url_fmt = '/api/container/:name';
     }
 }

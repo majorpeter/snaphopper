@@ -23,7 +23,7 @@ const props = defineProps<{
             </tr>
           </tbody></table>
         </div>
-        <small class="opacity-50 text-nowrap" v-if="value.updateAvailable">Update avail.</small>
+        <small class="opacity-50 text-nowrap" v-if="false">Update avail.</small>
       </div>
     </router-link>
 </template>

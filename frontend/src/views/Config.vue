@@ -55,7 +55,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import axios from "axios";
-import { API_PREFIX } from '../js/util';
 import { endpoints } from '@api';
 
 export default defineComponent({
@@ -74,7 +73,7 @@ export default defineComponent({
         this.saved = this.error = false;
 
         try {
-            await axios.post(API_PREFIX + endpoints.config.url, this.config);
+            await axios.post(endpoints.config.url, this.config);
             this.saved = true;
         } catch (e) {
             this.error = true;
@@ -92,7 +91,7 @@ export default defineComponent({
     }
   },
   async created() {
-    this.config = (await axios.get(API_PREFIX + endpoints.config.url)).data;
+    this.config = (await axios.get(endpoints.config.url)).data;
     this.loaded = true;
   }
 });
