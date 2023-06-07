@@ -14,13 +14,22 @@ import { Zfs } from './lib/zfs';
 
 const config_path = path.join(__dirname, 'config.json');
 
-const config: {
+let config: {
     port: number;
-    ssh_host: string;
-    ssh_username: string;
-    ssh_privkey_path: string;
+    ssh_host?: string;
+    ssh_username?: string;
+    ssh_privkey_path?: string;
     cors_enabled: boolean;  // for dev server
-} = JSON.parse(fs.readFileSync(config_path).toString());
+} = {
+    port: 8080,
+    cors_enabled: true //TODO change default
+};
+
+try {
+    config = JSON.parse(fs.readFileSync(config_path).toString());
+} catch (e) {
+    //TODO handle
+}
 
 const app: Express = express();
 if (config.cors_enabled) {
@@ -32,6 +41,10 @@ let zfs: Zfs|null = null;
 
 async function createSshConnectionServices() {
     docker = null;
+    if (config.ssh_host === undefined || config.ssh_username === undefined || config.ssh_privkey_path == undefined) {
+        return;
+    }
+
     try {
         let ssh = new NodeSSH();
         await ssh.connect({
@@ -86,13 +99,14 @@ async function createSshConnectionServices() {
                 let data: endpoints.stack.type = {
                     containers: [],
                     working_directory: working_dir_set.values().next().value,
+                    zfs_available: zfs != null && zfs.available,
                     zfs_dataset: null,
                     zfs_snapshots: [],
                     compose_config_file: compose_config_file_set.values().next().value,
                     working_directory_error: (working_dir_set.size != 1) || (compose_config_file_set.size != 1)
                 };
 
-                if (zfs) {
+                if (zfs != null && zfs.available) {
                     const datasetName = await zfs.getDataSetByMountPoint(data.working_directory);
                     if (datasetName) {
                         data.zfs_dataset = {
@@ -158,6 +172,7 @@ async function createSshConnectionServices() {
         config.ssh_privkey_path = data.ssh_privkey_path;
 
         await fsPromises.writeFile(config_path, JSON.stringify(config, undefined, 4), {flag: 'w'});
+        await createSshConnectionServices();
 
         res.sendStatus(200);
     });

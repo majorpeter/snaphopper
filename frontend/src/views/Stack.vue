@@ -21,7 +21,13 @@
         </td>
     </tr><tr>
         <th>ZFS Dataset:</th>
-        <td><code>{{ data.zfs_dataset?.name }}</code></td>
+        <td>
+            <code v-if="data.zfs_dataset">{{ data.zfs_dataset?.name }}</code>
+            <template v-if="!data.zfs_available">
+                <span class="badge rounded-pill text-bg-warning">Unavailable</span>
+                Cannot use ZFS functionality on host.
+            </template>
+        </td>
     </tr><tr v-if="data.zfs_dataset">
         <th>Filesystem usage:</th>
         <td>
