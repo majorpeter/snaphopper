@@ -38,6 +38,11 @@ if (config.cors_enabled) {
 app.use(bodyParser.json());
 app.use(express.static(path.resolve(__dirname, '../../frontend/dist')));
 
+
+const server = app.listen(config.port, () => {
+    console.log(`Listening on port ${config.port}.`);
+});
+
 let docker: Docker|null = null;
 let zfs: Zfs|null = null;
 
@@ -167,6 +172,7 @@ async function createSshConnectionServices() {
 
     app.post(endpoints.config.url, async (req: Request, res: Response) => {
         const data: endpoints.config.type = req.body;
+        const portChanged = config.port != data.port;
 
         config.port = data.port;
         config.ssh_username = data.ssh_username;
@@ -176,6 +182,15 @@ async function createSshConnectionServices() {
         }
 
         await fsPromises.writeFile(config_path, JSON.stringify(config, undefined, 4), {flag: 'w'});
+        console.log('Configuration saved.');
+
+        if (portChanged) {
+            server.close((err: Error|undefined) => {
+                server.listen(config.port, undefined, undefined, () => {
+                    console.log(`Listening port changed to ${config.port}`);
+                });
+            });
+        }
         await createSshConnectionServices();
 
         res.sendStatus(200);
@@ -199,7 +214,3 @@ async function createSshConnectionServices() {
         }
     });
 })();
-
-app.listen(config.port, () => {
-    console.log(`Listening on port ${config.port}.`);
-});
