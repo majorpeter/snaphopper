@@ -1,6 +1,11 @@
-import { CommitOptions, createStore, MutationTree, Store as VuexStore } from 'vuex'
+import { CommitOptions, createStore, MutationPayload, MutationTree, Store as VuexStore } from 'vuex'
+import { version as appVersion } from '@/../package.json';
+
+const localStorageVarName = 'store';
 
 export interface State {
+    /// used to validate versions for localStorage loads
+    appVersion: string;
     token: string;
     isLoggedIn: boolean;
 }
@@ -29,12 +34,27 @@ export const mutations: MutationTree<State> & Mutations = {
 export const store = createStore<State>({
     strict: true,
     state() {
+        // try to restore previous state
+        const storedJson = localStorage.getItem(localStorageVarName);
+        if (storedJson) {
+            const stored = JSON.parse(storedJson);
+            if (stored.appVersion == appVersion) {
+                return stored;
+            }
+        }
+
+        // give defaults otherwise
         return {
+            appVersion: appVersion,
             token: '',
             isLoggedIn: false
         };
     },
     mutations: mutations
+});
+
+store.subscribe((mutation: MutationPayload, state: State) => {
+    localStorage.setItem(localStorageVarName, JSON.stringify(state));
 });
 
 // based onr https://dev.to/3vilarthas/vuex-typescript-m4j

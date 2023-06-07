@@ -10,9 +10,10 @@
         "rootDirs": ["frontend/src", "backend/src/lib"],
         "jsx": "preserve",
         "jsxImportSource": "vue",
+        "resolveJsonModule": true
     },
     "references": [
         {"path": "../backend"}
     ],
-    "include": ["src/**/*", "src/**/*.vue", "../backend/src/lib/api.ts"]
+    "include": ["src/**/*", "src/**/*.vue", "package.json", "../backend/src/lib/api.ts"]
 }
