@@ -175,6 +175,13 @@ async function createSshConnectionServices() {
     app.post(endpoints.snapshot.create.url, async (req: Request, res: Response) => {
         const data = <endpoints.snapshot.create.req_type> req.body;
 
+        if (!Zfs.isPathValid(data.dataset)) {
+            res.status(400);
+            res.send(<endpoints.snapshot.create.error_resp_type> {
+                message: 'Dataset path is not valid.'
+            });
+            return;
+        }
         if (!Zfs.isNameValid(data.name)) {
             res.status(400);
             res.send(<endpoints.snapshot.create.error_resp_type> {
@@ -200,6 +207,52 @@ async function createSshConnectionServices() {
                 message: 'ZFS command failed.'
             });
             return;
+        }
+    });
+
+    app.post(endpoints.snapshot.clone.url, async (req: Request, res: Response) => {
+        const data = <endpoints.snapshot.clone.req_type> req.body;
+
+        if (!Zfs.isPathValid(data.dataset_path)) {
+            res.status(400);
+            res.send(<endpoints.snapshot.create.error_resp_type> {
+                message: 'Original dataset path is not valid.'
+            });
+            return;
+        }
+
+        if (!Zfs.isNameValid(data.snapshot_name)) {
+            res.status(400);
+            res.send(<endpoints.snapshot.create.error_resp_type> {
+                message: 'Snapshot name is not valid.'
+            });
+            return;
+        }
+
+        if (!Zfs.isPathValid(data.clone_path)) {
+            res.status(400);
+            res.send(<endpoints.snapshot.create.error_resp_type> {
+                message: 'Destination path is not valid.'
+            });
+            return;
+        }
+
+        if (!zfs || !zfs.available) {
+            res.status(500);
+            res.send(<endpoints.snapshot.create.error_resp_type> {
+                message: 'ZFS is not available on host.'
+            });
+            return;
+        }
+
+        try {
+            await zfs.cloneSnapshotToDataset(data.dataset_path, data.snapshot_name, data.clone_path);
+            res.sendStatus(200);
+        } catch (e: any) {
+            res.status(500);
+            res.send(<endpoints.snapshot.create.error_resp_type> {
+                message: `ZFS command failed: ${e.message}`
+            });
         }
     });
 

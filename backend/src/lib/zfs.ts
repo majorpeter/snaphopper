@@ -70,8 +70,11 @@ export class Zfs {
     }
 
     async createSnapshot(dataset: string, snapshotName: string) {
-        const output = await this.#exec('sudo', ['zfs', 'snapshot', dataset + '@' + snapshotName]);
-        console.log(output);
+        await this.#exec('sudo', ['zfs', 'snapshot', dataset + '@' + snapshotName]);
+    }
+
+    async cloneSnapshotToDataset(dataset: string, snapshotName: string, clonedDataset: string) {
+        await this.#exec('sudo', ['zfs', 'clone', dataset + '@' + snapshotName, clonedDataset]);
     }
 
     /**
@@ -80,5 +83,9 @@ export class Zfs {
     static isNameValid(name: string): boolean {
         const pattern = RegExp(/^([a-zA-Z0-9_\-\.])+$/);
         return Boolean(name.match(pattern));
+    }
+
+    static isPathValid(path: string): boolean {
+        return path.split('/').every((value) => Zfs.isNameValid(value));
     }
 };

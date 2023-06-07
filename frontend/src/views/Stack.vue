@@ -79,8 +79,10 @@
     </h4>
     <div :id="'collapse_'+i" class="accordion-collapse collapse" :aria-labelledby="'collapsehead_'+i" data-bs-parent="#snapshotList">
         <div class="accordion-body">
-        <p>Used: <strong>{{ snapshot.used }}</strong></p>
-        <p>Referenced: <strong>{{ snapshot.referenced }}</strong></p>
+            <p>Used: <strong>{{ snapshot.used }}</strong></p>
+            <p>Referenced: <strong>{{ snapshot.referenced }}</strong></p>
+
+            <button @click="cloneSnapshotClicked(snapshot.name)" class="btn btn-primary">Clone</button>
         </div>
     </div>
     </div>
@@ -141,6 +143,8 @@
   </div>
 </div>
 
+<StackSnapshotClone ref="stackSnapshotClone" :dataset-name="data.zfs_dataset?.name"></StackSnapshotClone>
+
 </template>
 
 <script lang="ts">
@@ -148,8 +152,12 @@ import { defineComponent } from 'vue';
 import axios, { AxiosError } from "axios";
 import { endpoints } from '@api';
 import { Modal } from 'bootstrap';
+import StackSnapshotClone from './Stack/StackSnapshotClone.vue';
 
 export default defineComponent({
+    components: {
+        StackSnapshotClone
+    },
     data() {
         return {
             name: this.$route.params.name,
@@ -228,6 +236,9 @@ export default defineComponent({
                 this.createSnapshot.error_message = resp.message;
                 this.createSnapshot.state = 'error';
             }
+        },
+        cloneSnapshotClicked(snapshot: string) {
+            (<typeof StackSnapshotClone> this.$refs.stackSnapshotClone).show(snapshot);
         }
     },
     async beforeRouteEnter(to, from, next) {
