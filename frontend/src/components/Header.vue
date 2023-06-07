@@ -4,20 +4,35 @@
             <img src="@/svg/clock-rotate-left-icon.svg" class="d-inline-block align-middle"/>
             <span class="fs-4">snaphopper</span>
         </router-link>
-        <ul class="nav nav-pills">
+        <ul class="nav nav-pills" v-if="$store.state.isLoggedIn">
             <li class="nav-item">
                 <router-link :to="{name: 'home'}" class="nav-link">Stacks</router-link>
             </li>
             <li class="nav-item">
                 <router-link :to="{name: 'config'}" class="nav-link">Config</router-link>
             </li>
-            <li class="nav-item" v-if="$store.state.isLoggedIn">
-                <!--TODO-->
-                <a href="/logout" class="nav-link">Logout</a>
+            <li class="nav-item">
+                <a href="#" class="nav-link" @click="logout">Logout</a>
             </li>
         </ul>
     </header>
 </template>
+
+<script lang="ts">
+import { paths } from '@/router';
+import { MutationTypes } from '@/store';
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+    methods: {
+        logout() {
+            //TODO invalidate token
+            this.$store.commit(MutationTypes.logout, undefined);
+            this.$router.push(paths.login);
+        }
+    }
+});
+</script>
 
 <style scoped>
 header > a > img {
