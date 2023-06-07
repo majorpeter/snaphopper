@@ -18,7 +18,7 @@ let config: {
     port: number;
     ssh_host?: string;
     ssh_username?: string;
-    ssh_privkey_path?: string;
+    ssh_privkey?: string;
     cors_enabled: boolean;  // for dev server
 } = {
     port: 8080,
@@ -41,7 +41,7 @@ let zfs: Zfs|null = null;
 
 async function createSshConnectionServices() {
     docker = null;
-    if (config.ssh_host === undefined || config.ssh_username === undefined || config.ssh_privkey_path == undefined) {
+    if (config.ssh_host === undefined || config.ssh_username === undefined || config.ssh_privkey == undefined) {
         return;
     }
 
@@ -50,7 +50,7 @@ async function createSshConnectionServices() {
         await ssh.connect({
             host: config.ssh_host,
             username: config.ssh_username,
-            privateKeyPath: config.ssh_privkey_path
+            privateKey: config.ssh_privkey
         });
 
         docker = new Docker((command, args) => {return ssh.exec(command, args)});
@@ -159,7 +159,7 @@ async function createSshConnectionServices() {
             port: config.port,
             ssh_username: config.ssh_username,
             ssh_host: config.ssh_host,
-            ssh_privkey_path: config.ssh_privkey_path
+            ssh_privkey_present: config.ssh_privkey != undefined
         });
     });
 
@@ -169,7 +169,9 @@ async function createSshConnectionServices() {
         config.port = data.port;
         config.ssh_username = data.ssh_username;
         config.ssh_host = data.ssh_host;
-        config.ssh_privkey_path = data.ssh_privkey_path;
+        if (data.ssh_privkey !== undefined) {
+            config.ssh_privkey = data.ssh_privkey;
+        }
 
         await fsPromises.writeFile(config_path, JSON.stringify(config, undefined, 4), {flag: 'w'});
         await createSshConnectionServices();

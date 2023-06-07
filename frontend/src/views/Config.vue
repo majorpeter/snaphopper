@@ -35,10 +35,12 @@
             </div>
 
             <div class="form-group row mb-2">
-                <label class="col-sm-3" for="sshPrivKeyPath">SSH private key path</label>
-                <div class="col-sm-9">
-                    <input type="text" class="form-control" id="sshPrivKeyPath" placeholder="~/.ssh/id_rsa" v-model="config.ssh_privkey_path"/>
-                <div class="form-text">Subject to change: Should be an upload form.</div>
+                <label class="col-sm-3" for="sshPrivKey">SSH private key</label>
+                <div class="col-sm-4">
+                    <input type="file" class="form-control" id="sshPrivKey" @change="sshPrivKeyUploaded"/>
+                <div class="form-text">
+                    <span v-if="config.ssh_privkey_present" class="badge rounded-pill bg-success" title="Already uploaded">Available</span>
+                    Private key cannot be downloaded for safety reasons.</div>
                 </div>
             </div>
 
@@ -79,6 +81,14 @@ export default defineComponent({
         } finally {
             this.saving = false;
         }
+    },
+    async sshPrivKeyUploaded(e: any) {
+        const f: File = e.target.files[0];
+        const fr = new FileReader();
+        fr.onload = (ev: any) => {
+            this.config.ssh_privkey = ev.target.result;
+        };
+        fr.readAsText(f);
     }
   },
   async created() {
