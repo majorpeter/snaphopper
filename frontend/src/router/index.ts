@@ -4,18 +4,12 @@ import Home from '@/views/Home.vue';
 import Stack from '@/views/Stack.vue';
 import Config from '@/views/Config.vue';
 import { store } from '@/store';
+import paths from './paths';
 
 const redirectUnauthenticatedToLogin = () => {
     if (!store.state.isLoggedIn) {
         return paths.login;
     }
-};
-
-export namespace paths {
-    export const home = '/';
-    export const login = '/login';
-    export const stack_by_name = '/stack/:name';
-    export const config = '/config';
 };
 
 const routes: RouteRecordRaw[] = [

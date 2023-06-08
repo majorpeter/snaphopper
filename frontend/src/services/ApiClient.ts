@@ -1,6 +1,7 @@
-import router, { paths } from "@/router";
+import paths from "@/router/paths";
 import { MutationTypes, store } from "@/store"
 import axios from "axios"
+import { useRouter } from "vue-router";
 
 export default () => {
     const instance = axios.create({
@@ -15,7 +16,7 @@ export default () => {
         // force logout & login if token expired
         if (error.response.status == 403) {
             store.commit(MutationTypes.logout);
-            router.push(paths.login);
+            useRouter().push(paths.login);
         }
 
         return error;

@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts">
-import { paths } from '@/router';
+import paths from '@/router/paths';
 import { MutationTypes } from '@/store';
 import { defineComponent } from 'vue';
 
