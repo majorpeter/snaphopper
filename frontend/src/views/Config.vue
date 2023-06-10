@@ -1,7 +1,7 @@
 <template>
     <h2><img src="@/svg/operations-icon.svg" class="d-inline-block align-middle"/> Configuration</h2>
 
-    <form @submit.prevent="submit">
+    <form @submit.prevent="submit" class="mb-4">
         <div class="alert alert-success alert-dismissible fade show" role="alert" v-if="saved">
           Configuration successfully saved!
           <button type="button" class="btn-close" aria-label="Close" @click="saved=false"></button>
@@ -50,14 +50,20 @@
             </button>
     </fieldset>
     </form>
+
+    <ChangePassword></ChangePassword>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { endpoints } from '@api';
 import ApiClient from '@/services/ApiClient';
+import ChangePassword from './Config/ChangePassword.vue';
 
 export default defineComponent({
+  components: {
+    ChangePassword
+  },
   data() {
     return {
       config: <endpoints.config.type> {},

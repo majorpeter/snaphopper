@@ -109,6 +109,13 @@ export namespace endpoints {
             ssh_privkey_present?: boolean; // instead of downloading
         };
     }
+    export namespace config_change_password {
+        export const url = '/api/config/password';
+        export interface type {
+            current_pw: string;
+            new_pw: string;
+        };
+    }
 
     export namespace container {
         export const url_fmt = '/api/container/:name';

@@ -312,4 +312,19 @@ async function createSshConnectionServices() {
 
         res.sendStatus(200);
     });
+
+
+    const changePasswordHandler: RequestHandler<unknown, unknown, endpoints.config_change_password.type, unknown> = async (req, res) => {
+        if (bcrypt.compareSync(req.body.current_pw, config.login_password_hash!)) {
+            config.login_password_hash = bcrypt.hashSync(req.body.new_pw, config.salt);
+
+            await fsPromises.writeFile(config_path, JSON.stringify(config, undefined, 4), {flag: 'w'});
+            console.log('Configuration saved: password changed.');
+
+            res.sendStatus(200);
+        } else {
+            res.sendStatus(400);
+        }
+    };
+    app.post(endpoints.config_change_password.url, authenticationRequred, changePasswordHandler);
 })();
