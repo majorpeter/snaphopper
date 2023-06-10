@@ -15,6 +15,7 @@ export type Type = {
     ssh_host?: string;
     ssh_username?: string;
     ssh_privkey?: string;
+    applications_path?: string;
     cors_enabled: boolean;  // for dev server
 };
 

@@ -15,11 +15,13 @@ export namespace endpoints {
         export interface type {
             connected: boolean;
             projects: {[key: string]: {
-                    containers: {
-                        name: string;
-                        service: string;
-                        image_name: string;
-                        image_hash: string;
+                    services: {
+                        service_name: string;
+                        container_name?: string;
+                        image_name?: string;
+                        image_hash?: string;
+                        state: string;
+                        running: boolean;
                     }[];
                     //TODO updateAvailable: boolean;
                 }
@@ -115,6 +117,7 @@ export namespace endpoints {
             ssh_username?: string;
             ssh_privkey?: string;  // cannot be downloaded
             ssh_privkey_present?: boolean; // instead of downloading
+            applications_path?: string;
         };
     }
     export namespace config_change_password {

@@ -44,6 +44,13 @@
                 </div>
             </div>
 
+            <div class="form-group row mb-2">
+                <label class="col-sm-3" for="appPath">Applications path</label>
+                <div class="col-sm-5">
+                    <input type="text" class="form-control" id="appPath" v-model="config.applications_path"/>
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary" :disabled="saving">
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="saving"></span>
                 Submit

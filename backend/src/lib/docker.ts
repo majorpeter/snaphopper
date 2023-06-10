@@ -46,7 +46,7 @@ export interface ImageInfo {
 };
 
 export class Docker {
-    #_exec: exec|undefined;
+    #exec: exec|undefined;
 
     static projectLabel = 'com.docker.compose.project';
     static workingDirLabel = 'com.docker.compose.project.working_dir';
@@ -58,23 +58,23 @@ export class Docker {
     }
 
     setAdapter(exec: exec|undefined) {
-        this.#_exec = exec;
+        this.#exec = exec;
     }
 
     public get available(): boolean {
-        return this.#_exec !== undefined;
+        return this.#exec !== undefined;
     }
 
     async getContainers(): Promise<string[]> {
-        return (await this.#_exec!('docker', ['container', 'ls', '--format', '{{.Names}}'])).split('\n');
+        return (await this.#exec!('docker', ['container', 'ls', '--format', '{{.Names}}'])).split('\n');
     }
 
     async inspectContainers(names: string[]): Promise<ContainerInfo[]> {
-        return JSON.parse(await this.#_exec!('docker', ['container', 'inspect', ...names]));
+        return JSON.parse(await this.#exec!('docker', ['container', 'inspect', ...names]));
     }
 
     async inspectImages(names: string[]): Promise<[ImageInfo]> {
-        return JSON.parse(await this.#_exec!('docker', ['image', 'inspect', ...names]));
+        return JSON.parse(await this.#exec!('docker', ['image', 'inspect', ...names]));
     }
 
     async getDockerComposeProjects(): Promise<{[key: string]: ContainerInfo[]}> {
@@ -100,7 +100,7 @@ export class Docker {
 
         for (const data of container_data) {
             if (data.Config.Labels[Docker.projectLabel] == composeProjectName) {
-                return this.#_exec!('cat', [path.join(data.Config.Labels[Docker.workingDirLabel], data.Config.Labels[Docker.configFileNameLabel])]);
+                return this.#exec!('cat', [path.join(data.Config.Labels[Docker.workingDirLabel], data.Config.Labels[Docker.configFileNameLabel])]);
             }
         }
         return null;

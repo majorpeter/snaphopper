@@ -11,7 +11,8 @@ export default function (app: Express, config: Config.Type, server: http.Server,
             port: config.port,
             ssh_username: config.ssh_username,
             ssh_host: config.ssh_host,
-            ssh_privkey_present: config.ssh_privkey != undefined
+            ssh_privkey_present: config.ssh_privkey != undefined,
+            applications_path: config.applications_path
         });
     });
 
@@ -24,6 +25,7 @@ export default function (app: Express, config: Config.Type, server: http.Server,
         if (req.body.ssh_privkey !== undefined) {
             config.ssh_privkey = req.body.ssh_privkey;
         }
+        config.applications_path = req.body.applications_path;
 
         Config.save(config);
 

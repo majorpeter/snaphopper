@@ -11,10 +11,12 @@ import LoginController from './controllers/LoginController';
 import ConfigController from './controllers/ConfigController';
 import SnapshotController from './controllers/SnapshotController';
 import StackController from './controllers/StackController';
+import { Applications } from './lib/applications';
 
 const config = Config.init();
 
 const docker: Docker = new Docker();
+const applications: Applications = new Applications();
 const zfs: Zfs = new Zfs();
 
 const app: Express = express();
@@ -30,7 +32,7 @@ const server = app.listen(config.port, () => {
 
 LoginController(app, config);
 ConfigController(app, config, server, setupSshConnectionServices);
-StackController(app, docker, zfs);
+StackController(app, docker, applications, zfs);
 SnapshotController(app, zfs);
 
 setupSshConnectionServices();
@@ -38,6 +40,7 @@ setupSshConnectionServices();
 async function setupSshConnectionServices() {
     docker.setAdapter(undefined);
     zfs.setAdapter(undefined);
+    applications.setPath(config.applications_path);
 
     if (!config.ssh_host || !config.ssh_username || !config.ssh_privkey) {
         return;
@@ -53,6 +56,7 @@ async function setupSshConnectionServices() {
 
         docker.setAdapter((command, args) => {return ssh.exec(command, args)});
         zfs.setAdapter((command, args) => {return ssh.exec(command, args)});
+        applications.setAdapter((command, args) => {return ssh.exec(command, args)});
     } catch (e: any) {
         console.log(e);
     }

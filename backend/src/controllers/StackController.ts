@@ -1,11 +1,12 @@
 import { Express } from 'express';
 import { authenticationRequred } from '../lib/policies';
 import { endpoints } from '../lib/api';
-import { Docker } from '../lib/docker';
+import { ContainerInfo, Docker } from '../lib/docker';
 import { Zfs } from '../lib/zfs';
 import { DockerHub } from '../lib/dockerhub';
+import { Applications, DockerComposeYaml } from '../lib/applications';
 
-export default function(app: Express, docker: Docker, zfs: Zfs) {
+export default function(app: Express, docker: Docker, applications: Applications, zfs: Zfs) {
     app.get<{}, endpoints.stack_list.type>(endpoints.stack_list.url, authenticationRequred, async (_req, res) => {
         let data: endpoints.stack_list.type = {
             connected: docker.available,
@@ -13,19 +14,34 @@ export default function(app: Express, docker: Docker, zfs: Zfs) {
         };
 
         if (docker.available) {
+            const apps = await applications.getProjects();
             const projects = await docker.getDockerComposeProjects();
 
-            for (const i of Object.keys(projects)) {
-                data.projects[i] = {
-                    containers: projects[i].map((value) => {
-                        return <endpoints.stack_list.type['projects']['']['containers'][0]> {
-                            name: value.Name.replace(/^\//,''),
-                            service: value.Config.Labels[Docker.serviceNameLabel],
-                            image_name: value.Config.Image,
-                            image_hash: value.Image
-                        };
-                    }),    //TODO more fields
+            for (const project_name of Object.keys(apps)) {
+                data.projects[project_name] = {
+                    services: []
                 };
+
+                const project = project_name in projects ? projects[project_name] : undefined;
+                for (const service_name of Object.keys(apps[project_name].services)) {
+                    const service_config = apps[project_name].services[service_name];
+                    const running_service_container = project ? project.find((i) => i.Config.Labels[Docker.serviceNameLabel] == service_name) : null;
+                    const service_record: endpoints.stack_list.type['projects']['']['services'][0] = {
+                        container_name: running_service_container?.Name.replace(/^\//,''),
+                        service_name: service_name,
+                        state: running_service_container ? running_service_container['State'].Status : 'stopped',
+                        running: running_service_container != null
+                    };
+
+                    if (running_service_container) {
+                        service_record.image_name = running_service_container?.Config.Image;
+                        service_record.image_hash = running_service_container?.Image;
+                    } else {
+                        service_record.image_name = service_config.image;
+                    }
+
+                    data.projects[project_name].services.push(service_record);
+                }
             }
         }
         res.send(data);

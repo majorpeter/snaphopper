@@ -15,11 +15,12 @@ const props = defineProps<{
       <div class="gap-2 w-100 justify-content-between">
           <h6 class="mb-0 "><strong>{{ name }}</strong></h6>
           <div>
-          <table class="table table-hover mb-0 opacity-75"><tbody v-for="item in value.containers">
+          <table class="table table-hover mb-0 opacity-75"><tbody v-for="item in value.services">
             <tr>
-              <td class="col-sm-4"><strong>{{ item.service }}</strong></td>
-              <td class="col-sm-4">{{ item.name }}</td>
+              <td class="col-sm-3"><strong>{{ item.service_name }}</strong></td>
+              <td class="col-sm-4">{{ item.container_name }}</td>
               <td class="col-sm-4" :title="item.image_hash">{{ item.image_name }}</td>
+              <td class="col-sm-1">{{ item.state }}</td>
             </tr>
           </tbody></table>
         </div>
