@@ -9,9 +9,9 @@ import {Docker} from './lib/docker';
 import {DockerHub} from './lib/dockerhub';
 import { Zfs } from './lib/zfs';
 import { authenticationRequred } from './lib/policies';
-import bcrypt from 'bcryptjs';
 import { Config } from './lib/config';
 import LoginController from './controllers/LoginController';
+import ConfigController from './controllers/ConfigController';
 
 const config = Config.init();
 
@@ -22,11 +22,12 @@ if (config.cors_enabled) {
 app.use(bodyParser.json());
 app.use(express.static(path.resolve(__dirname, '../../frontend/dist')));
 
-LoginController(app, config);
-
 const server = app.listen(config.port, () => {
     console.log(`Listening on port ${config.port}.`);
 });
+
+LoginController(app, config);
+ConfigController(app, config, server, createSshConnectionServices);
 
 let docker: Docker|null = null;
 let zfs: Zfs|null = null;
@@ -240,52 +241,4 @@ async function createSshConnectionServices() {
             });
         }
     });
-
-    app.get(endpoints.config.url, authenticationRequred, async (req: Request, res: Response) => {
-        res.send(<endpoints.config.type> {
-            port: config.port,
-            ssh_username: config.ssh_username,
-            ssh_host: config.ssh_host,
-            ssh_privkey_present: config.ssh_privkey != undefined
-        });
-    });
-
-    app.post(endpoints.config.url, authenticationRequred, async (req: Request, res: Response) => {
-        const data: endpoints.config.type = req.body;
-        const portChanged = config.port != data.port;
-
-        config.port = data.port;
-        config.ssh_username = data.ssh_username;
-        config.ssh_host = data.ssh_host;
-        if (data.ssh_privkey !== undefined) {
-            config.ssh_privkey = data.ssh_privkey;
-        }
-
-        Config.save(config);
-
-        if (portChanged) {
-            server.close((err: Error|undefined) => {
-                server.listen(config.port, undefined, undefined, () => {
-                    console.log(`Listening port changed to ${config.port}`);
-                });
-            });
-        }
-        await createSshConnectionServices();
-
-        res.sendStatus(200);
-    });
-
-
-    const changePasswordHandler: RequestHandler<unknown, unknown, endpoints.config_change_password.type, unknown> = async (req, res) => {
-        if (bcrypt.compareSync(req.body.current_pw, config.login_password_hash!)) {
-            config.login_password_hash = bcrypt.hashSync(req.body.new_pw, config.salt);
-
-            Config.save(config);
-
-            res.sendStatus(200);
-        } else {
-            res.sendStatus(400);
-        }
-    };
-    app.post(endpoints.config_change_password.url, authenticationRequred, changePasswordHandler);
 })();

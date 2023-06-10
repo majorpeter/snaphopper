@@ -103,8 +103,8 @@ export namespace endpoints {
         export const url = '/api/config';
         export interface type {
             port: number;
-            ssh_host: string;
-            ssh_username: string;
+            ssh_host?: string;
+            ssh_username?: string;
             ssh_privkey?: string;  // cannot be downloaded
             ssh_privkey_present?: boolean; // instead of downloading
         };
