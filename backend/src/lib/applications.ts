@@ -34,16 +34,20 @@ export class Applications {
         return [];
     }
 
-    async getProjects(): Promise<{[key: string]: DockerComposeYaml}> {
-        let result: {[key: string]: DockerComposeYaml} = {};
+    async getProjects() {
+        let result: {[key: string]: {
+            compose?: DockerComposeYaml
+        }} = {};
         if (this.#path && this.#exec) {
             const folders = await this.getProjectFolders();
             for (const f of folders) {
                 try {
                     const yamlContent = await this.#exec('cat', [this.#path + '/' + f + '/' + 'docker-compose.yml']);
-                    result[f] = <DockerComposeYaml> yaml.load(yamlContent);
+                    result[f] = {
+                        compose: <DockerComposeYaml> yaml.load(yamlContent)
+                    };
                 } catch (e) {
-                    console.log(`Cannot read compose file for ${f}.`);
+                    result[f] = {};
                 }
             }
         }

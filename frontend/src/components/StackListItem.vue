@@ -15,7 +15,7 @@ const props = defineProps<{
       <div class="gap-2 w-100 justify-content-between">
           <h6 class="mb-0 "><strong>{{ name }}</strong></h6>
           <div>
-          <table class="table table-hover mb-0 opacity-75"><tbody v-for="item in value.services">
+          <table class="table table-hover mb-0 opacity-75" v-if="value.status=='ok'"><tbody v-for="item in value.services">
             <tr>
               <td class="col-sm-3"><strong>{{ item.service_name }}</strong></td>
               <td class="col-sm-4">
@@ -29,6 +29,9 @@ const props = defineProps<{
               <td class="col-sm-1" :class="classForStatus(item)">{{ item.state }}</td>
             </tr>
           </tbody></table>
+          <div class="alert alert-danger show" role="alert" v-else-if="value.status=='access_error'">
+            Cannot access docker-compose file!
+          </div>
         </div>
         <small class="opacity-50 text-nowrap" v-if="false">Update avail.</small>
       </div>

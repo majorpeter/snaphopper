@@ -15,6 +15,7 @@ export namespace endpoints {
         export interface type {
             connected: boolean;
             projects: {[key: string]: {
+                    status: 'ok'|'access_error',
                     services: {
                         service_name: string;
                         container_name?: string;

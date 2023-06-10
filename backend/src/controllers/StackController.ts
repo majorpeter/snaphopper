@@ -19,28 +19,31 @@ export default function(app: Express, docker: Docker, applications: Applications
 
             for (const project_name of Object.keys(apps)) {
                 data.projects[project_name] = {
+                    status: apps[project_name].compose != undefined ? 'ok' : 'access_error',
                     services: []
                 };
 
                 const project = project_name in projects ? projects[project_name] : undefined;
-                for (const service_name of Object.keys(apps[project_name].services)) {
-                    const service_config = apps[project_name].services[service_name];
-                    const running_service_container = project ? project.find((i) => i.Config.Labels[Docker.serviceNameLabel] == service_name) : null;
-                    const service_record: endpoints.stack_list.type['projects']['']['services'][0] = {
-                        container_name: running_service_container?.Name.replace(/^\//,''),
-                        service_name: service_name,
-                        custom_build: service_config.build != undefined,
-                        state: running_service_container ? running_service_container['State'].Status : 'N/A',
-                    };
+                if (apps[project_name].compose != undefined) {
+                    for (const service_name of Object.keys(apps[project_name].compose!.services)) {
+                        const service_config = apps[project_name].compose!.services[service_name];
+                        const running_service_container = project ? project.find((i) => i.Config.Labels[Docker.serviceNameLabel] == service_name) : null;
+                        const service_record: endpoints.stack_list.type['projects']['']['services'][0] = {
+                            container_name: running_service_container?.Name.replace(/^\//,''),
+                            service_name: service_name,
+                            custom_build: service_config.build != undefined,
+                            state: running_service_container ? running_service_container['State'].Status : 'N/A',
+                        };
 
-                    if (running_service_container) {
-                        service_record.image_name = running_service_container?.Config.Image;
-                        service_record.image_hash = running_service_container?.Image;
-                    } else {
-                        service_record.image_name = service_config.image;
+                        if (running_service_container) {
+                            service_record.image_name = running_service_container?.Config.Image;
+                            service_record.image_hash = running_service_container?.Image;
+                        } else {
+                            service_record.image_name = service_config.image;
+                        }
+
+                        data.projects[project_name].services.push(service_record);
                     }
-
-                    data.projects[project_name].services.push(service_record);
                 }
             }
         }
