@@ -3,8 +3,6 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 
 import {endpoints} from './lib/api';
-import fs from 'fs';
-import {promises as fsPromises} from 'fs';
 import path from 'path';
 import {NodeSSH} from 'node-ssh';
 import {Docker} from './lib/docker';
@@ -12,32 +10,10 @@ import {DockerHub} from './lib/dockerhub';
 import { Zfs } from './lib/zfs';
 import { authenticationRequred } from './lib/policies';
 import bcrypt from 'bcryptjs';
+import { Config } from './lib/config';
+import LoginController from './controllers/LoginController';
 
-const config_path = path.join(__dirname, 'config.json');
-
-let config: {
-    salt?: string;
-    login_password_hash?: string;
-    port: number;
-    ssh_host?: string;
-    ssh_username?: string;
-    ssh_privkey?: string;
-    cors_enabled: boolean;  // for dev server
-} = {
-    port: 8080,
-    cors_enabled: false
-};
-
-try {
-    config = JSON.parse(fs.readFileSync(config_path).toString());
-} catch (e) {
-    //TODO handle
-}
-
-if (!config.salt) {
-    config.salt = bcrypt.genSaltSync();
-    config.login_password_hash = bcrypt.hashSync('admin', config.salt);
-}
+const config = Config.init();
 
 const app: Express = express();
 if (config.cors_enabled) {
@@ -46,6 +22,7 @@ if (config.cors_enabled) {
 app.use(bodyParser.json());
 app.use(express.static(path.resolve(__dirname, '../../frontend/dist')));
 
+LoginController(app, config);
 
 const server = app.listen(config.port, () => {
     console.log(`Listening on port ${config.port}.`);
@@ -77,20 +54,6 @@ async function createSshConnectionServices() {
 
 (async() => {
     await createSshConnectionServices();
-
-    const loginPostHandler: RequestHandler<unknown, endpoints.login.resp_type, endpoints.login.type, unknown> = async (req, res) => {
-        if (bcrypt.compareSync(req.body.password, config.login_password_hash!)) {
-            res.send({
-                success: true,
-                token: 'mytoken',
-            });
-        } else {
-            res.send({
-                success: false
-            })
-        }
-    };
-    app.post(endpoints.login.url, loginPostHandler);
 
     app.get(endpoints.stack_list.url, authenticationRequred, async (req: Request, res: Response) => {
         let data: endpoints.stack_list.type = {
@@ -298,8 +261,7 @@ async function createSshConnectionServices() {
             config.ssh_privkey = data.ssh_privkey;
         }
 
-        await fsPromises.writeFile(config_path, JSON.stringify(config, undefined, 4), {flag: 'w'});
-        console.log('Configuration saved.');
+        Config.save(config);
 
         if (portChanged) {
             server.close((err: Error|undefined) => {
@@ -318,8 +280,7 @@ async function createSshConnectionServices() {
         if (bcrypt.compareSync(req.body.current_pw, config.login_password_hash!)) {
             config.login_password_hash = bcrypt.hashSync(req.body.new_pw, config.salt);
 
-            await fsPromises.writeFile(config_path, JSON.stringify(config, undefined, 4), {flag: 'w'});
-            console.log('Configuration saved: password changed.');
+            Config.save(config);
 
             res.sendStatus(200);
         } else {

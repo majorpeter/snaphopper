@@ -1,0 +1,45 @@
+import path from "path";
+import fs from 'fs';
+import {promises as fsPromises} from 'fs';
+import bcrypt from 'bcryptjs';
+
+const config_path = path.resolve(__dirname, '../config.json');
+
+export namespace Config {
+
+export type Type = {
+    salt?: string;
+    login_password_hash?: string;
+    port: number;
+    ssh_host?: string;
+    ssh_username?: string;
+    ssh_privkey?: string;
+    cors_enabled: boolean;  // for dev server
+};
+
+export function init(): Type {
+    let config: Type = {
+        port: 8080,
+        cors_enabled: false
+    };
+
+    try {
+        config = JSON.parse(fs.readFileSync(config_path).toString());
+    } catch (e) {
+        //TODO handle
+    }
+
+    if (!config.salt) {
+        config.salt = bcrypt.genSaltSync();
+        config.login_password_hash = bcrypt.hashSync('admin', config.salt);
+    }
+
+    return config;
+}
+
+export async function save(config: Type) {
+    await fsPromises.writeFile(config_path, JSON.stringify(config, undefined, 4), {flag: 'w'});
+    console.log('Configuration saved.');
+}
+
+}
