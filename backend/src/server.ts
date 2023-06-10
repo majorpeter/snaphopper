@@ -12,6 +12,7 @@ import ConfigController from './controllers/ConfigController';
 import SnapshotController from './controllers/SnapshotController';
 import StackController from './controllers/StackController';
 import { Applications } from './lib/applications';
+import { setAuthenticationDisabled } from './lib/policies';
 
 const config = Config.init();
 
@@ -36,6 +37,7 @@ StackController(app, docker, applications, zfs);
 SnapshotController(app, zfs);
 
 setupSshConnectionServices();
+setAuthenticationDisabled(config.auth_disabled);
 
 async function setupSshConnectionServices() {
     docker.setAdapter(undefined);
