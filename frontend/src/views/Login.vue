@@ -8,6 +8,8 @@
             </p>
         </div>
         <div class="card-body">
+            <div class="alert alert-danger fade show" role="alert" v-if="error_message">{{ error_message }}</div>
+
             <div class="row g-0">
                 <div class="col-md-4" id="imageCol">
                     <p class="text-center">
@@ -21,7 +23,7 @@
                             <label for="userName">User</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="password" class="form-control" @keypress="onPasswordKeyPressed" id="password" autofocus/>
+                            <input type="password" class="form-control" @keypress="onPasswordKeyPressed" v-model="password" id="password" autofocus/>
                             <label for="password">Password</label>
                         </div>
                     </p>
@@ -37,17 +39,34 @@
 
 <script lang="ts">
 import paths from '@/router/paths';
+import ApiClient from '@/services/ApiClient';
 import { MutationTypes } from '@/store';
+import { endpoints } from '@api';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
+    data() {
+        return {
+            password: '',
+            error_message: <string|null> null
+        };
+    },
     methods: {
-        login() {
-            //TODO actual login check
+        async login() {
+            try {
+                const result = <endpoints.login.resp_type> (await ApiClient().post(endpoints.login.url, <endpoints.login.type> {
+                    password: this.password
+                })).data;
 
-            //TODO token
-            this.$store.commit(MutationTypes.login, 'mytoken');
-            this.$router.push(paths.home);
+                if (result.success) {
+                    this.$store.commit(MutationTypes.login, result.token!);
+                    this.$router.push(paths.home);
+                } else {
+                    this.error_message = 'Incorrect password!';
+                }
+            } catch (e) {
+                this.error_message = 'Unknown error: ' + (<Error> e).message;
+            }
         },
         onPasswordKeyPressed(e: KeyboardEvent) {
             if (e.key == 'Enter') {

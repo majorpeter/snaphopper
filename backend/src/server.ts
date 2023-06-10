@@ -1,4 +1,4 @@
-import express, {Express, Request, Response} from 'express';
+import express, {Express, Request, RequestHandler, Response} from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 
@@ -69,6 +69,20 @@ async function createSshConnectionServices() {
 
 (async() => {
     await createSshConnectionServices();
+
+    const loginPostHandler: RequestHandler<unknown, endpoints.login.resp_type, endpoints.login.type, unknown> = async (req, res) => {
+        if (req.body.password == '123456') {
+            res.send({
+                success: true,
+                token: 'mytoken',
+            });
+        } else {
+            res.send({
+                success: false
+            })
+        }
+    };
+    app.post(endpoints.login.url, loginPostHandler);
 
     app.get(endpoints.stack_list.url, authenticationRequred, async (req: Request, res: Response) => {
         let data: endpoints.stack_list.type = {

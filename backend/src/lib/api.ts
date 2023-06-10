@@ -1,4 +1,15 @@
 export namespace endpoints {
+    export namespace login {
+        export const url = '/api/logn';
+        export interface type {
+            password: string;
+        };
+        export interface resp_type {
+            success: boolean;
+            token?: string;
+        };
+    }
+
     export namespace stack_list {
         export const url = '/api/stacks';
         export interface type {

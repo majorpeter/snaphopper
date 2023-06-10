@@ -17,9 +17,9 @@ export default () => {
         if (error.response.status == 403) {
             store.commit(MutationTypes.logout);
             useRouter().push(paths.login);
+        } else {
+            throw error;
         }
-
-        return error;
     });
     return instance;
 }
