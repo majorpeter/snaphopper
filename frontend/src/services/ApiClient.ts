@@ -1,7 +1,5 @@
-import paths from "@/router/paths";
 import { MutationTypes, store } from "@/store"
 import axios from "axios"
-import { useRouter } from "vue-router";
 
 export default () => {
     const instance = axios.create({
@@ -16,7 +14,9 @@ export default () => {
         // force logout & login if token expired
         if (error.response.status == 403) {
             store.commit(MutationTypes.logout);
-            useRouter().push(paths.login);
+
+            // cannot use router to redirect: router may not be available from calling context (while navigating)
+            location.reload();
         } else {
             throw error;
         }
