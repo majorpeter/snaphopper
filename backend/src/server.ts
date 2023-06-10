@@ -11,10 +11,13 @@ import {Docker} from './lib/docker';
 import {DockerHub} from './lib/dockerhub';
 import { Zfs } from './lib/zfs';
 import { authenticationRequred } from './lib/policies';
+import bcrypt from 'bcryptjs';
 
 const config_path = path.join(__dirname, 'config.json');
 
 let config: {
+    salt?: string;
+    login_password_hash?: string;
     port: number;
     ssh_host?: string;
     ssh_username?: string;
@@ -29,6 +32,11 @@ try {
     config = JSON.parse(fs.readFileSync(config_path).toString());
 } catch (e) {
     //TODO handle
+}
+
+if (!config.salt) {
+    config.salt = bcrypt.genSaltSync();
+    config.login_password_hash = bcrypt.hashSync('admin', config.salt);
 }
 
 const app: Express = express();
@@ -71,7 +79,7 @@ async function createSshConnectionServices() {
     await createSshConnectionServices();
 
     const loginPostHandler: RequestHandler<unknown, endpoints.login.resp_type, endpoints.login.type, unknown> = async (req, res) => {
-        if (req.body.password == '123456') {
+        if (bcrypt.compareSync(req.body.password, config.login_password_hash!)) {
             res.send({
                 success: true,
                 token: 'mytoken',

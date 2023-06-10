@@ -64,6 +64,7 @@ export default defineComponent({
                 } else {
                     this.error_message = 'Incorrect password!';
                 }
+                this.password = '';
             } catch (e) {
                 this.error_message = 'Unknown error: ' + (<Error> e).message;
             }
