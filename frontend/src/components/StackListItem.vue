@@ -18,9 +18,15 @@ const props = defineProps<{
           <table class="table table-hover mb-0 opacity-75"><tbody v-for="item in value.services">
             <tr>
               <td class="col-sm-3"><strong>{{ item.service_name }}</strong></td>
-              <td class="col-sm-4">{{ item.container_name }}</td>
-              <td class="col-sm-4" :title="item.image_hash">{{ item.image_name }}</td>
-              <td class="col-sm-1">{{ item.state }}</td>
+              <td class="col-sm-4">
+                <template v-if="item.container_name">{{ item.container_name }}</template>
+                <span v-else class="text-muted">N/A</span>
+              </td>
+              <td class="col-sm-4" :title="item.image_hash">
+                <em v-if="item.custom_build">custom build</em>
+                <template v-else="item.image_name">{{ item.image_name }}</template>
+              </td>
+              <td class="col-sm-1" :class="classForStatus(item)">{{ item.state }}</td>
             </tr>
           </tbody></table>
         </div>
@@ -37,6 +43,22 @@ export default defineComponent({
     return {
       navigatingAway: false
     };
+  },
+  methods: {
+    classForStatus(item: endpoints.stack_list.type['projects']['']['services'][0]) {
+      switch (item.state) {
+        case 'running':
+          return 'text-success';
+        case 'N/A':
+          return 'text-muted';
+        case 'restarting':
+        case 'removing':
+        case 'exited':
+        case 'dead':
+          return 'text-warning';
+      }
+      return '';
+    }
   }
 });
 </script>

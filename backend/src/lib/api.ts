@@ -20,8 +20,8 @@ export namespace endpoints {
                         container_name?: string;
                         image_name?: string;
                         image_hash?: string;
-                        state: string;
-                        running: boolean;
+                        custom_build: boolean;
+                        state: 'N/A' | 'created'|'running'|'paused'|'restarting'|'removing'|'exited'|'dead';
                     }[];
                     //TODO updateAvailable: boolean;
                 }

@@ -1,10 +1,10 @@
 import { Express } from 'express';
 import { authenticationRequred } from '../lib/policies';
 import { endpoints } from '../lib/api';
-import { ContainerInfo, Docker } from '../lib/docker';
+import { Docker } from '../lib/docker';
 import { Zfs } from '../lib/zfs';
 import { DockerHub } from '../lib/dockerhub';
-import { Applications, DockerComposeYaml } from '../lib/applications';
+import { Applications } from '../lib/applications';
 
 export default function(app: Express, docker: Docker, applications: Applications, zfs: Zfs) {
     app.get<{}, endpoints.stack_list.type>(endpoints.stack_list.url, authenticationRequred, async (_req, res) => {
@@ -29,8 +29,8 @@ export default function(app: Express, docker: Docker, applications: Applications
                     const service_record: endpoints.stack_list.type['projects']['']['services'][0] = {
                         container_name: running_service_container?.Name.replace(/^\//,''),
                         service_name: service_name,
-                        state: running_service_container ? running_service_container['State'].Status : 'stopped',
-                        running: running_service_container != null
+                        custom_build: service_config.build != undefined,
+                        state: running_service_container ? running_service_container['State'].Status : 'N/A',
                     };
 
                     if (running_service_container) {

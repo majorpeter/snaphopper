@@ -8,7 +8,7 @@ export interface ContainerInfo {
     Path: string;
     Args: string[];
     State: {
-        Status: string;
+        Status: 'created'|'running'|'paused'|'restarting'|'removing'|'exited'|'dead';
         Running: boolean;
         Paused: boolean;
         Restarting: boolean;
