@@ -61,6 +61,10 @@ export class Docker {
         this.#_exec = exec;
     }
 
+    public get available(): boolean {
+        return this.#_exec !== undefined;
+    }
+
     async getContainers(): Promise<string[]> {
         return (await this.#_exec!('docker', ['container', 'ls', '--format', '{{.Names}}'])).split('\n');
     }

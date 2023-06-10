@@ -39,7 +39,7 @@ async function setupSshConnectionServices() {
     docker.setAdapter(undefined);
     zfs.setAdapter(undefined);
 
-    if (config.ssh_host === undefined || config.ssh_username === undefined || config.ssh_privkey == undefined) {
+    if (!config.ssh_host || !config.ssh_username || !config.ssh_privkey) {
         return;
     }
 

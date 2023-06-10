@@ -6,13 +6,13 @@ import { Zfs } from '../lib/zfs';
 import { DockerHub } from '../lib/dockerhub';
 
 export default function(app: Express, docker: Docker, zfs: Zfs) {
-    app.get<{}, endpoints.stack_list.type>(endpoints.stack_list.url, authenticationRequred, async (req, res) => {
+    app.get<{}, endpoints.stack_list.type>(endpoints.stack_list.url, authenticationRequred, async (_req, res) => {
         let data: endpoints.stack_list.type = {
-            connected: docker != null,
+            connected: docker.available,
             projects: {}
         };
 
-        if (docker) {
+        if (docker.available) {
             const projects = await docker.getDockerComposeProjects();
 
             for (const i of Object.keys(projects)) {
@@ -32,7 +32,7 @@ export default function(app: Express, docker: Docker, zfs: Zfs) {
     });
 
     app.get<endpoints.stack.params, endpoints.stack.type, {}>(endpoints.stack.url, authenticationRequred, async (req, res) => {
-        if (docker) {
+        if (docker.available) {
             const projects = await docker.getDockerComposeProjects();
             if (req.params.name in projects) {
                 const stack = projects[req.params.name];
@@ -87,7 +87,7 @@ export default function(app: Express, docker: Docker, zfs: Zfs) {
     });
 
     app.get<endpoints.stack.docker_compose_file.params>(endpoints.stack.docker_compose_file.url, authenticationRequred, async (req, res) => {
-        if (docker) {
+        if (docker.available) {
             res.contentType('yaml');
             res.send(await docker.getDockerComposeFile(req.params.name));
         } else {
