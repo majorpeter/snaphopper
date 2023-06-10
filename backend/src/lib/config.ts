@@ -4,6 +4,7 @@ import {promises as fsPromises} from 'fs';
 import bcrypt from 'bcryptjs';
 
 const config_path = path.resolve(__dirname, '../config.json');
+const session_path = path.resolve(__dirname, '../session.json');
 
 export namespace Config {
 
@@ -40,6 +41,18 @@ export function init(): Type {
 export async function save(config: Type) {
     await fsPromises.writeFile(config_path, JSON.stringify(config, undefined, 4), {flag: 'w'});
     console.log('Configuration saved.');
+}
+
+export function restoreSession() {
+    try {
+        return JSON.parse(fs.readFileSync(session_path).toString());
+    } catch (e) {
+    }
+    return undefined;
+}
+
+export function saveSession(session: Object) {
+    fsPromises.writeFile(session_path, JSON.stringify(session, undefined, 4), {flag: 'w'});
 }
 
 }

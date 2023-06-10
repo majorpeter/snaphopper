@@ -29,6 +29,8 @@ export function isTokenValid(token: string): boolean {
 }
 
 export default function(app: Express, config: Config.Type) {
+    validSessionToken = Config.restoreSession();
+
     app.post<{}, endpoints.login.resp_type, endpoints.login.type>(endpoints.login.url, async (req, res) => {
         if (bcrypt.compareSync(req.body.password, config.login_password_hash!)) {
             const ts = new Date().getTime();
@@ -36,6 +38,7 @@ export default function(app: Express, config: Config.Type) {
                 value: bcrypt.hashSync(ts.toString(), config.salt!),    // just something random
                 timestamp: ts
             }
+            Config.saveSession(validSessionToken);
 
             res.send({
                 success: true,
