@@ -12,8 +12,12 @@ import { authenticationRequred } from './lib/policies';
 import { Config } from './lib/config';
 import LoginController from './controllers/LoginController';
 import ConfigController from './controllers/ConfigController';
+import SnapshotController from './controllers/SnapshotController';
 
 const config = Config.init();
+
+let docker: Docker|null = null;
+const zfs: Zfs = new Zfs();
 
 const app: Express = express();
 if (config.cors_enabled) {
@@ -28,9 +32,7 @@ const server = app.listen(config.port, () => {
 
 LoginController(app, config);
 ConfigController(app, config, server, createSshConnectionServices);
-
-let docker: Docker|null = null;
-let zfs: Zfs|null = null;
+SnapshotController(app, zfs);
 
 async function createSshConnectionServices() {
     docker = null;
@@ -47,7 +49,7 @@ async function createSshConnectionServices() {
         });
 
         docker = new Docker((command, args) => {return ssh.exec(command, args)});
-        zfs = new Zfs((command, args) => {return ssh.exec(command, args)});
+        zfs.connect((command, args) => {return ssh.exec(command, args)});
     } catch (e: any) {
         console.log(e);
     }
@@ -142,103 +144,6 @@ async function createSshConnectionServices() {
             res.send(await docker.getDockerComposeFile(req.params.name));
         } else {
             res.sendStatus(500);
-        }
-    });
-
-    app.get(endpoints.snapshot.list.url, async (req: Request, res: Response) => {
-        const req_data: endpoints.snapshot.list.req_type = {
-            dataset: <string> req.query['dataset']
-        };
-
-        if (typeof(req_data.dataset) == 'string' && zfs && zfs.available) {
-            const resp: endpoints.snapshot.list.resp_type = (await zfs.getSnapshots(req_data.dataset)).sort((a, b) => (a.name < b.name) ? 1 : -1);
-            res.send(resp);
-        } else {
-            res.sendStatus(500);
-        }
-    });
-
-    app.post(endpoints.snapshot.create.url, authenticationRequred, async (req: Request, res: Response) => {
-        const data = <endpoints.snapshot.create.req_type> req.body;
-
-        if (!Zfs.isPathValid(data.dataset)) {
-            res.status(400);
-            res.send(<endpoints.snapshot.create.error_resp_type> {
-                message: 'Dataset path is not valid.'
-            });
-            return;
-        }
-        if (!Zfs.isNameValid(data.name)) {
-            res.status(400);
-            res.send(<endpoints.snapshot.create.error_resp_type> {
-                message: 'Snapshot name is not valid.'
-            });
-            return;
-        }
-
-        if (!zfs || !zfs.available) {
-            res.status(500);
-            res.send(<endpoints.snapshot.create.error_resp_type> {
-                message: 'ZFS is not available on host.'
-            });
-            return;
-        }
-
-        try {
-            await zfs.createSnapshot(data.dataset, data.name);
-            res.sendStatus(200);
-        } catch (e) {
-            res.status(500);
-            res.send(<endpoints.snapshot.create.error_resp_type> {
-                message: 'ZFS command failed.'
-            });
-            return;
-        }
-    });
-
-    app.post(endpoints.snapshot.clone.url, authenticationRequred, async (req: Request, res: Response) => {
-        const data = <endpoints.snapshot.clone.req_type> req.body;
-
-        if (!Zfs.isPathValid(data.dataset_path)) {
-            res.status(400);
-            res.send(<endpoints.snapshot.create.error_resp_type> {
-                message: 'Original dataset path is not valid.'
-            });
-            return;
-        }
-
-        if (!Zfs.isNameValid(data.snapshot_name)) {
-            res.status(400);
-            res.send(<endpoints.snapshot.create.error_resp_type> {
-                message: 'Snapshot name is not valid.'
-            });
-            return;
-        }
-
-        if (!Zfs.isPathValid(data.clone_path)) {
-            res.status(400);
-            res.send(<endpoints.snapshot.create.error_resp_type> {
-                message: 'Destination path is not valid.'
-            });
-            return;
-        }
-
-        if (!zfs || !zfs.available) {
-            res.status(500);
-            res.send(<endpoints.snapshot.create.error_resp_type> {
-                message: 'ZFS is not available on host.'
-            });
-            return;
-        }
-
-        try {
-            await zfs.cloneSnapshotToDataset(data.dataset_path, data.snapshot_name, data.clone_path);
-            res.sendStatus(200);
-        } catch (e: any) {
-            res.status(500);
-            res.send(<endpoints.snapshot.create.error_resp_type> {
-                message: `ZFS command failed: ${e.message}`
-            });
         }
     });
 })();

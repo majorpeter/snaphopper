@@ -193,7 +193,7 @@ export default defineComponent({
         },
         updateSnapshots() {
             if (this.data.zfs_dataset) {
-                ApiClient().get(endpoints.snapshot.list.url, {params: <endpoints.snapshot.list.req_type> {
+                ApiClient().get(endpoints.snapshot.list.url, {params: <endpoints.snapshot.list.query_type> {
                     dataset: this.data.zfs_dataset?.name
                 }}).then((value) => {
                     this.zfs_snapshots = value.data;

@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 
-export const authenticationRequred = (req: Request, res: Response, next: NextFunction) => {
+export const authenticationRequred: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
     if (req.header('Authorization') == 'Bearer mytoken') {
         next();
     } else {

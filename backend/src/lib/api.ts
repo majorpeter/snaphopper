@@ -62,7 +62,7 @@ export namespace endpoints {
     export namespace snapshot {
         export namespace list {
             export const url = '/api/snapshot/list';
-            export interface req_type {
+            export type query_type = {
                 dataset: string;
             };
             export type resp_type = {

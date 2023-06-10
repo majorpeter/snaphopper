@@ -6,17 +6,16 @@ import http from 'http';
 import bcrypt from 'bcryptjs';
 
 export default function (app: Express, config: Config.Type, server: http.Server, onConfigChanged: () => Promise<void>) {
-    const conifgGetHandler: RequestHandler<unknown, endpoints.config.type, unknown, unknown> = async (_req, res) => {
+    app.get<{}, endpoints.config.type, {}, {}>(endpoints.config.url, authenticationRequred, async (_req, res) => {
         res.send({
             port: config.port,
             ssh_username: config.ssh_username,
             ssh_host: config.ssh_host,
             ssh_privkey_present: config.ssh_privkey != undefined
         });
-    };
-    app.get(endpoints.config.url, authenticationRequred, conifgGetHandler);
+    });
 
-    const configPostHandler: RequestHandler<unknown, unknown, endpoints.config.type, unknown> = async (req, res) => {
+    app.post<{}, {}, endpoints.config.type, {}>(endpoints.config.url, authenticationRequred, async (req, res) => {
         const portChanged = config.port != req.body.port;
 
         config.port = req.body.port;
@@ -38,10 +37,9 @@ export default function (app: Express, config: Config.Type, server: http.Server,
         await onConfigChanged();
 
         res.sendStatus(200);
-    };
-    app.post(endpoints.config.url, authenticationRequred, configPostHandler);
+    });
 
-    const changePasswordHandler: RequestHandler<unknown, unknown, endpoints.config_change_password.type, unknown> = async (req, res) => {
+    app.post<{}, {}, endpoints.config_change_password.type, {}>(endpoints.config_change_password.url, authenticationRequred, async (req, res) => {
         if (bcrypt.compareSync(req.body.current_pw, config.login_password_hash!)) {
             config.login_password_hash = bcrypt.hashSync(req.body.new_pw, config.salt);
 
@@ -51,6 +49,5 @@ export default function (app: Express, config: Config.Type, server: http.Server,
         } else {
             res.sendStatus(400);
         }
-    };
-    app.post(endpoints.config_change_password.url, authenticationRequred, changePasswordHandler);
+    });
 }
