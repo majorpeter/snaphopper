@@ -1,4 +1,4 @@
-import { Express, RequestHandler, Request, Response } from "express";
+import { Express } from "express";
 import { endpoints } from "../lib/api";
 import { Zfs } from "../lib/zfs";
 import { authenticationRequred } from "../lib/policies";
@@ -13,7 +13,7 @@ export default function (app: Express, zfs: Zfs) {
         }
     });
 
-    app.post<{}, endpoints.snapshot.create.error_resp_type, endpoints.snapshot.create.req_type, {}>(endpoints.snapshot.create.url, authenticationRequred, async (req, res) => {
+    app.post<{}, endpoints.snapshot.create.error_resp_type, endpoints.snapshot.create.req_type>(endpoints.snapshot.create.url, authenticationRequred, async (req, res) => {
         if (!Zfs.isPathValid(req.body.dataset)) {
             res.status(400);
             res.send(<endpoints.snapshot.create.error_resp_type> {
@@ -49,7 +49,7 @@ export default function (app: Express, zfs: Zfs) {
         }
     });
 
-    app.post<{}, endpoints.snapshot.clone.error_resp_type, endpoints.snapshot.clone.req_type, {}>(endpoints.snapshot.clone.url, authenticationRequred, async (req, res) => {
+    app.post<{}, endpoints.snapshot.clone.error_resp_type, endpoints.snapshot.clone.req_type>(endpoints.snapshot.clone.url, authenticationRequred, async (req, res) => {
         if (!Zfs.isPathValid(req.body.dataset_path)) {
             res.status(400);
             res.send(<endpoints.snapshot.create.error_resp_type> {

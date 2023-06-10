@@ -1,12 +1,12 @@
 import { endpoints } from "../lib/api";
 import { Config } from "../lib/config";
 import { authenticationRequred } from "../lib/policies";
-import {Express, RequestHandler} from 'express';
+import { Express } from 'express';
 import http from 'http';
 import bcrypt from 'bcryptjs';
 
 export default function (app: Express, config: Config.Type, server: http.Server, onConfigChanged: () => Promise<void>) {
-    app.get<{}, endpoints.config.type, {}, {}>(endpoints.config.url, authenticationRequred, async (_req, res) => {
+    app.get<{}, endpoints.config.type>(endpoints.config.url, authenticationRequred, async (_req, res) => {
         res.send({
             port: config.port,
             ssh_username: config.ssh_username,
@@ -15,7 +15,7 @@ export default function (app: Express, config: Config.Type, server: http.Server,
         });
     });
 
-    app.post<{}, {}, endpoints.config.type, {}>(endpoints.config.url, authenticationRequred, async (req, res) => {
+    app.post<{}, {}, endpoints.config.type>(endpoints.config.url, authenticationRequred, async (req, res) => {
         const portChanged = config.port != req.body.port;
 
         config.port = req.body.port;
@@ -39,7 +39,7 @@ export default function (app: Express, config: Config.Type, server: http.Server,
         res.sendStatus(200);
     });
 
-    app.post<{}, {}, endpoints.config_change_password.type, {}>(endpoints.config_change_password.url, authenticationRequred, async (req, res) => {
+    app.post<{}, {}, endpoints.config_change_password.type>(endpoints.config_change_password.url, authenticationRequred, async (req, res) => {
         if (bcrypt.compareSync(req.body.current_pw, config.login_password_hash!)) {
             config.login_password_hash = bcrypt.hashSync(req.body.new_pw, config.salt);
 

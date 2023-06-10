@@ -4,16 +4,17 @@ export class Zfs {
     #exec: exec|undefined;
     #available: boolean = false;
 
-    constructor() {}
-
-    connect(exec: exec) {
+    setAdapter(exec: exec|undefined) {
+        this.#available = false;
         this.#exec = exec;
 
-        this.#exec('sudo', ['zfs', 'list']).then(() => {
-            this.#available = true;
-        }).catch(() => {
-            console.log('ZFS functionality not available.');
-        });
+        if (this.#exec) {
+            this.#exec('sudo', ['zfs', 'list']).then(() => {
+                this.#available = true;
+            }).catch(() => {
+                console.log('ZFS functionality not available.');
+            });
+        }
     }
 
     public get available(): boolean {

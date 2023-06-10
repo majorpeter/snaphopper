@@ -30,6 +30,10 @@ export namespace endpoints {
     export namespace stack {
         export const url = '/api/stack/:name';
 
+        export type params = {
+            name: string
+        };
+
         export interface type {
             containers: {
                 name: string;
@@ -56,6 +60,10 @@ export namespace endpoints {
 
         export namespace docker_compose_file {
             export const url = "/api/stack/:name/compose";
+
+            export type params = {
+                name: string
+            };
         }
     }
 
