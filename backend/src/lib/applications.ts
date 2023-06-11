@@ -1,7 +1,11 @@
 import yaml from 'js-yaml';
 import { Docker } from './docker';
 
-export type exec = (command: string, args: string[], stdin?: string) => Promise<string>;
+export type exec = (command: string, args: string[], options?: {
+    stdin?: string,
+    working_dir?: string,
+    stdout_stderr_merge?: boolean
+}) => Promise<string>;
 
 export interface DockerComposeYaml {
     version: string;
@@ -65,7 +69,7 @@ export class Applications {
     async writeProjectFile(name: string, contents: string): Promise<boolean> {
         if (this.#path && this.#exec && await this.projectExists(name)) {
             try {
-                await this.#exec('tee', [this.#path + '/' + name + '/' + Docker.ConfigFileName], contents);
+                await this.#exec('tee', [this.#path + '/' + name + '/' + Docker.ConfigFileName], {stdin: contents});
                 return true;
             } catch (e) {
             }
@@ -91,5 +95,25 @@ export class Applications {
             }
         }
         return result;
+    }
+
+    async composeUp(name: string): Promise<string|null> {
+        if (this.#path && this.#exec && await this.projectExists(name)) {
+            return await this.#exec('docker-compose', ['--no-ansi', 'up', '-d'], {
+                working_dir: this.#path + '/' + name,
+                stdout_stderr_merge: true
+            });
+        }
+        return null;
+    }
+
+    async composeDown(name: string): Promise<string|null> {
+        if (this.#path && this.#exec && await this.projectExists(name)) {
+            return await this.#exec('docker-compose', ['--no-ansi', 'down'], {
+                working_dir: this.#path + '/' + name,
+                stdout_stderr_merge: true
+            });
+        }
+        return null;
     }
 }

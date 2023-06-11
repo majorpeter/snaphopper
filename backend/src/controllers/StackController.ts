@@ -149,6 +149,18 @@ export default function(app: Express, docker: Docker, applications: Applications
         }
     });
 
+    app.post<endpoints.stack.docker_compose.params, endpoints.stack.docker_compose.post_resp_type, endpoints.stack.docker_compose.post_req_type, {}>(endpoints.stack.docker_compose.url, authenticationRequred,async (req, res) => {
+        if (req.body.command == 'up') {
+            const result = await applications.composeUp(req.params.name);
+            res.send(result ? result : 'docker-compose call failed');
+        } else if (req.body.command == 'down') {
+            const result = await applications.composeDown(req.params.name);
+            res.send(result ? result : 'docker-compose call failed');
+        } else {
+            res.sendStatus(400);
+        }
+    });
+
     app.get<endpoints.stack.docker_compose_file.params, endpoints.stack.docker_compose_file.get_resp_type>(endpoints.stack.docker_compose_file.url, authenticationRequred, async (req, res) => {
         if (docker.available) {
             res.contentType('yaml');

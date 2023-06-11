@@ -68,7 +68,7 @@ export namespace endpoints {
         };
 
         export namespace docker_compose_file {
-            export const url = "/api/stack/:name/compose";
+            export const url = "/api/stack/:name/compose_file";
 
             export type params = {
                 name: string
@@ -77,6 +77,17 @@ export namespace endpoints {
             export type post_req_type = {
                 content: string;
             };
+        }
+
+        export namespace docker_compose {
+            export const url = "/api/stack/:name/compose";
+            export type params = {
+                name: string
+            };
+            export type post_req_type = {
+                command: 'up'|'down';
+            };
+            export type post_resp_type = string;
         }
     }
 
@@ -137,9 +148,5 @@ export namespace endpoints {
             current_pw: string;
             new_pw: string;
         };
-    }
-
-    export namespace container {
-        export const url_fmt = '/api/container/:name';
     }
 }

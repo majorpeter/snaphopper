@@ -1,7 +1,17 @@
 <template>
 <h2><img src="@/svg/multiple-layers-icon.svg" class="d-inline-block align-middle"/> {{ name }}</h2>
 
-<h3>Services</h3>
+<h3>
+    Services
+    <button :disabled="!data.compose_config_file_name" class="btn btn-primary dropdown-toggle float-end" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="dockerComposeExecuting"></span>
+        Docker-Compose Actions
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" :class="dockerComposeExecuting ? 'disabled' : ''" title="Start or recreate services" @click="dockerComposeUp" href="#">Up</a></li>
+        <li><a class="dropdown-item" :class="dockerComposeExecuting ? 'disabled' : ''" title="Stop services" @click="dockerComposeDown" href="#">Down</a></li>
+    </ul>
+</h3>
 
 <div class="alert alert-danger alert-dismissible fade show" role="alert" v-if="data.working_directory_error">
     Cannot determine Docker Compose working directory! Compose project names may be overlapping.
@@ -17,7 +27,7 @@
         <td v-if="data.compose_config_file_name">
             <code>{{ data.compose_config_file_name }}</code>
             &nbsp;
-            <button type="button" class="btn btn-primary" @click="showComposeFileClicked" :disabled="composeFileLoading">
+            <button type="button" class="btn btn-primary" @click="showComposeFileClicked" :disabled="composeFileLoading || dockerComposeExecuting">
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="composeFileLoading"></span>
                 ...
             </button>
@@ -138,6 +148,7 @@
   </div>
 </div>
 
+<MessageModal ref="message"></MessageModal>
 <DockerComposeFile ref="composeFile" :name="<string> name" :filepath="data.working_directory + '/' + data.compose_config_file_name"></DockerComposeFile>
 <StackSnapshotClone ref="stackSnapshotClone" :dataset-name="data.zfs_dataset?.name"></StackSnapshotClone>
 
@@ -148,6 +159,7 @@ import { defineComponent } from 'vue';
 import { AxiosError } from "axios";
 import { endpoints } from '@api';
 import { Modal } from 'bootstrap';
+import MessageModal from '@/components/MessageModal.vue';
 import DockerComposeFile from './Stack/DockerComposeFile.vue';
 import StackSnapshotClone from './Stack/StackSnapshotClone.vue';
 import ApiClient from '@/services/ApiClient';
@@ -155,6 +167,7 @@ import containerStatusColor from '@/services/ContainerStatusColor';
 
 export default defineComponent({
     components: {
+        MessageModal,
         DockerComposeFile,
         StackSnapshotClone
     },
@@ -163,6 +176,7 @@ export default defineComponent({
             name: this.$route.params.name,
             data: <endpoints.stack.type> {services: {}},
             zfs_snapshots: <endpoints.snapshot.list.resp_type> [],
+            dockerComposeExecuting: false,
             createSnapshot: {
                 modal: <Modal> {},
                 model: {
@@ -193,6 +207,43 @@ export default defineComponent({
                     this.zfs_snapshots = value.data;
                 });
             }
+        },
+        async reloadData() {
+            this.data = (await ApiClient().get(endpoints.stack.url.replace(':name', <string> this.name))).data;
+        },
+        async dockerComposeUp() {
+            if (this.dockerComposeExecuting) {
+                return;
+            }
+
+            this.dockerComposeExecuting = true;
+            try {
+                const resp = (await ApiClient().post(endpoints.stack.docker_compose.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose.post_req_type> {
+                    command: 'up'
+                })).data;
+                (<typeof MessageModal> this.$refs.message).showHtml('docker-compose up -d', resp.replace(/\n/g, '<br/>'));
+                this.reloadData();
+            } catch (e) {
+                (<typeof MessageModal> this.$refs.message).show('"docker-compose up -d" failed', 'Command failed');
+            }
+            this.dockerComposeExecuting = false;
+        },
+        async dockerComposeDown() {
+            if (this.dockerComposeExecuting) {
+                return;
+            }
+
+            this.dockerComposeExecuting = true;
+            try {
+                const resp = (await ApiClient().post(endpoints.stack.docker_compose.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose.post_req_type> {
+                    command: 'down'
+                })).data;
+                (<typeof MessageModal> this.$refs.message).showHtml('docker-compose down', resp.replace(/\n/g, '<br/>'));
+                this.reloadData();
+            } catch (e) {
+                (<typeof MessageModal> this.$refs.message).show('"docker-compose down" failed', 'Command failed');
+            }
+            this.dockerComposeExecuting = false;
         },
         showSnapshotCreateDialog() {
             // TODO get suggestion from backend
