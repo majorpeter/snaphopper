@@ -25,24 +25,29 @@ export default function(app: Express, docker: Docker, applications: Applications
 
                 const project = project_name in projects ? projects[project_name] : undefined;
                 if (apps[project_name].compose != undefined) {
-                    for (const service_name of Object.keys(apps[project_name].compose!.services)) {
-                        const service_config = apps[project_name].compose!.services[service_name];
-                        const running_service_container = project ? project.find((i) => i.Config.Labels[Docker.serviceNameLabel] == service_name) : null;
-                        const service_record: endpoints.stack_list.type['projects']['']['services'][0] = {
-                            container_name: running_service_container?.Name.replace(/^\//,''),
-                            service_name: service_name,
-                            custom_build: service_config.build != undefined,
-                            status: running_service_container ? running_service_container['State'].Status : 'N/A',
-                        };
+                    try {
+                        for (const service_name of Object.keys(apps[project_name].compose!.services)) {
+                            const service_config = apps[project_name].compose!.services[service_name];
+                            const running_service_container = project ? project.find((i) => i.Config.Labels[Docker.serviceNameLabel] == service_name) : null;
+                            const service_record: endpoints.stack_list.type['projects']['']['services'][0] = {
+                                container_name: running_service_container?.Name.replace(/^\//,''),
+                                service_name: service_name,
+                                custom_build: service_config.build != undefined,
+                                status: running_service_container ? running_service_container['State'].Status : 'N/A',
+                            };
 
-                        if (running_service_container) {
-                            service_record.image_name = running_service_container?.Config.Image;
-                            service_record.image_hash = running_service_container?.Image;
-                        } else {
-                            service_record.image_name = service_config.image;
+                            if (running_service_container) {
+                                service_record.image_name = running_service_container?.Config.Image;
+                                service_record.image_hash = running_service_container?.Image;
+                            } else {
+                                service_record.image_name = service_config.image;
+                            }
+
+                            data.projects[project_name].services.push(service_record);
                         }
-
-                        data.projects[project_name].services.push(service_record);
+                    }
+                    catch (e) {
+                        data.projects[project_name].status = 'invalid_compose_file';
                     }
                 }
             }
@@ -64,17 +69,21 @@ export default function(app: Express, docker: Docker, applications: Applications
                 data.compose_config_file_name = Docker.ConfigFileName;
 
                 const project = await applications.getProject(req.params.name);
-                if (project) {
-                    for (const service_name of Object.keys(project.services)) {
-                        const image = project.services[service_name].image;
-                        data.services[service_name] = {
-                            dockerfile_image: {
-                                name: image,
-                                url: image ? DockerHub.getUrl(image.split(':')[0]) : undefined
-                            },
-                            status: 'N/A'
-                        };
+                try {
+                    if (project) {
+                        for (const service_name of Object.keys(project.services)) {
+                            const image = project.services[service_name].image;
+                            data.services[service_name] = {
+                                dockerfile_image: {
+                                    name: image,
+                                    url: image ? DockerHub.getUrl(image.split(':')[0]) : undefined
+                                },
+                                status: 'N/A'
+                            };
+                        }
                     }
+                } catch (e) {
+                    data.compose_config_invalid = true;
                 }
             }
 

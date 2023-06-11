@@ -30,7 +30,10 @@ const props = defineProps<{
             </tr>
           </tbody></table>
           <div class="alert alert-warning show mt-3" role="alert" v-else-if="value.status=='access_error'">
-            Cannot access docker-compose file!
+            Cannot access <em>docker-compose</em> file!
+          </div>
+          <div class="alert alert-warning show mt-3" role="alert" v-else-if="value.status=='invalid_compose_file'">
+            <em>docker-compose</em> file is not valid!
           </div>
         </div>
         <small class="opacity-50 text-nowrap" v-if="false">Update avail.</small>

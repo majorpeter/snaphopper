@@ -45,6 +45,10 @@
     </tr>
 </tbody></table></div>
 
+<div class="alert alert-danger show mb-5" role="alert" v-if="data.compose_config_invalid">
+    Docker Compose file is not valid!
+</div>
+
 <div class="mb-5" v-if="Object.keys(data.services).length"><table class="table table-hover"><thead><tr>
     <th>Service</th>
     <th>Container name</th>

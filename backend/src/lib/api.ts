@@ -17,7 +17,7 @@ export namespace endpoints {
         export interface type {
             connected: boolean;
             projects: {[key: string]: {
-                    status: 'ok'|'access_error',
+                    status: 'ok'|'invalid_compose_file'|'access_error',
                     services: {
                         service_name: string;
                         container_name?: string;
@@ -57,6 +57,7 @@ export namespace endpoints {
             }};
             working_directory?: string;
             compose_config_file_name?: string;
+            compose_config_invalid?: boolean;
             zfs_available: boolean;
             zfs_dataset: null|{
                 name: string;
