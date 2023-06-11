@@ -32,7 +32,7 @@ export default function(app: Express, docker: Docker, applications: Applications
                             container_name: running_service_container?.Name.replace(/^\//,''),
                             service_name: service_name,
                             custom_build: service_config.build != undefined,
-                            state: running_service_container ? running_service_container['State'].Status : 'N/A',
+                            status: running_service_container ? running_service_container['State'].Status : 'N/A',
                         };
 
                         if (running_service_container) {
@@ -72,7 +72,7 @@ export default function(app: Express, docker: Docker, applications: Applications
                                 name: image,
                                 url: image ? DockerHub.getUrl(image.split(':')[0]) : undefined
                             },
-                            state: 'N/A'
+                            status: 'N/A'
                         };
                     }
                 }
@@ -98,7 +98,7 @@ export default function(app: Express, docker: Docker, applications: Applications
 
                     if (!Object.keys(data.services).includes(service_name)) {
                         data.services[service_name] = {
-                            state: 'N/A'
+                            status: 'N/A'
                         };
                     }
 
@@ -116,7 +116,7 @@ export default function(app: Express, docker: Docker, applications: Applications
                         base: base,
                         base_url: base ? DockerHub.getUrl(base!.split(':')[0]) : undefined
                     };
-                    service.state = value.State.Status;
+                    service.status = value.State.Status;
                 }
             }
 

@@ -26,7 +26,7 @@ const props = defineProps<{
                 <em v-if="item.custom_build">custom build</em>
                 <template v-else="item.image_name">{{ item.image_name }}</template>
               </td>
-              <td class="col-sm-1" :class="classForStatus(item)">{{ item.state }}</td>
+              <td class="col-sm-1" :class="containerStatusColor(item.status)">{{ item.status }}</td>
             </tr>
           </tbody></table>
           <div class="alert alert-warning show mt-3" role="alert" v-else-if="value.status=='access_error'">
@@ -40,28 +40,13 @@ const props = defineProps<{
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import containerStatusColor from '@/services/ContainerStatusColor';
 
 export default defineComponent({
   data() {
     return {
       navigatingAway: false
     };
-  },
-  methods: {
-    classForStatus(item: endpoints.stack_list.type['projects']['']['services'][0]) {
-      switch (item.state) {
-        case 'running':
-          return 'text-success';
-        case 'N/A':
-          return 'text-muted';
-        case 'restarting':
-        case 'removing':
-        case 'exited':
-        case 'dead':
-          return 'text-warning';
-      }
-      return '';
-    }
   }
 });
 </script>

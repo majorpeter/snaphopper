@@ -69,7 +69,7 @@
         </template>
         <span v-else>custom</span>
     </td>
-    <td>{{ i.state }}</td>
+    <td :class="containerStatusColor(i.status)">{{ i.status }}</td>
 </tr></tbody></table></div>
 
 <template v-if="data.zfs_available && data.zfs_dataset">
@@ -163,6 +163,7 @@ import { endpoints } from '@api';
 import { Modal } from 'bootstrap';
 import StackSnapshotClone from './Stack/StackSnapshotClone.vue';
 import ApiClient from '@/services/ApiClient';
+import containerStatusColor from '@/services/ContainerStatusColor';
 
 export default defineComponent({
     components: {
@@ -249,7 +250,8 @@ export default defineComponent({
         },
         cloneSnapshotClicked(snapshot: string) {
             (<typeof StackSnapshotClone> this.$refs.stackSnapshotClone).show(snapshot);
-        }
+        },
+        containerStatusColor: containerStatusColor
     },
     async beforeRouteEnter(to, from, next) {
         let promise = ApiClient().get(endpoints.stack.url.replace(':name', <string> to.params.name));

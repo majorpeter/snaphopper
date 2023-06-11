@@ -1,4 +1,6 @@
 export namespace endpoints {
+    export type DockerContainerStatus = 'N/A' | 'created'|'running'|'paused'|'restarting'|'removing'|'exited'|'dead';
+
     export namespace login {
         export const url = '/api/logn';
         export interface type {
@@ -22,7 +24,7 @@ export namespace endpoints {
                         image_name?: string;
                         image_hash?: string;
                         custom_build: boolean;
-                        state: 'N/A' | 'created'|'running'|'paused'|'restarting'|'removing'|'exited'|'dead';
+                        status: DockerContainerStatus;
                     }[];
                     //TODO updateAvailable: boolean;
                 }
@@ -51,7 +53,7 @@ export namespace endpoints {
                     base_url?: string;
                 };
                 container_name?: string;
-                state: 'N/A' | 'created'|'running'|'paused'|'restarting'|'removing'|'exited'|'dead';
+                status: DockerContainerStatus;
             }};
             working_directory?: string;
             compose_config_file_name?: string;
