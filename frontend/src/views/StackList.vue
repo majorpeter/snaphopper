@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import StackListItem from './StackListItem.vue';
+import StackListItem from '../components/StackListItem.vue';
 </script>
 
 <template>
