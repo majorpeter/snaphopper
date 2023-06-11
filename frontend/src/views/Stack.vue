@@ -14,8 +14,8 @@
         <td><code>{{ data.working_directory }}</code></td>
     </tr><tr>
         <th>Docker-compose file:</th>
-        <td v-if="data.compose_config_file">
-            <code>{{ data.compose_config_file }}</code>
+        <td v-if="data.compose_config_file_name">
+            <code>{{ data.compose_config_file_name }}</code>
             &nbsp;
             <button type="button" class="btn btn-primary" @click="showComposeFile" :disabled="composeFile.loading">
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="composeFile.loading"></span>
@@ -41,24 +41,33 @@
         </td>
     </tr><tr>
         <th>Services count:</th>
-        <td v-if="data.containers">{{ data.containers.length }}</td>
+        <td v-if="data.services">{{ Object.keys(data.services).length }}</td>
     </tr>
 </tbody></table></div>
 
-<div class="mb-5"><table class="table table-hover"><thead><tr>
+<div class="mb-5" v-if="Object.keys(data.services).length"><table class="table table-hover"><thead><tr>
     <th>Service</th>
     <th>Container name</th>
     <th>Image</th>
     <th>State</th>
-</tr></thead><tbody><tr v-for="i in data.containers">
-    <td>{{ i.service }}</td>
-    <td>{{ i.name }}</td>
-    <td :title="i.image.hash">
-        <a v-if="i.image.url" :href="i.image.url" target="_blank">{{ i.image.name }}</a>
-        <p v-else>
-            {{ i.image.name }} <strong>(custom)</strong><br/>
-            <strong>from</strong> <a :href="i.image.base_url!" target="_blank">{{ i.image.base }}</a>
-        </p>
+</tr></thead><tbody><tr v-for="i, service_name in data.services">
+    <td>{{ service_name }}</td>
+    <td>
+        <template v-if="i.container_name">{{ i.container_name }}</template>
+        <span class="text-muted" v-else>N/A</span>
+    </td>
+    <td>
+        <template v-if="i.existing_image">
+            <a v-if="i.existing_image.url" :href="i.existing_image.url" :title="i.existing_image.hash" target="_blank">{{ i.existing_image.name }}</a>
+            <p v-else>
+                <span :title="i.existing_image.hash">{{ i.existing_image.name }}</span> <strong>(custom)</strong><br/>
+                <strong>from</strong> <a :href="i.existing_image.base_url!" target="_blank">{{ i.existing_image.base }}</a>
+            </p>
+        </template>
+        <template v-else-if="i.dockerfile_image?.name">
+            <a :href="i.dockerfile_image?.url" target="_blank">{{ i.dockerfile_image?.name }}</a>
+        </template>
+        <span v-else>custom</span>
     </td>
     <td>{{ i.state }}</td>
 </tr></tbody></table></div>
@@ -94,7 +103,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5">{{ data.working_directory}}/{{ data.compose_config_file }}</h1>
+        <h1 class="modal-title fs-5">{{ data.working_directory}}/{{ data.compose_config_file_name }}</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -162,7 +171,7 @@ export default defineComponent({
     data() {
         return {
             name: this.$route.params.name,
-            data: <endpoints.stack.type> {},
+            data: <endpoints.stack.type> {services: {}},
             zfs_snapshots: <endpoints.snapshot.list.resp_type> [],
             composeFile: {
                 modal: <Modal> {},

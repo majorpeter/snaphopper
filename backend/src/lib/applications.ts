@@ -1,4 +1,5 @@
 import yaml from 'js-yaml';
+import { Docker } from './docker';
 
 export type exec = (command: string, args: string[]) => Promise<string>;
 
@@ -34,7 +35,26 @@ export class Applications {
         return [];
     }
 
-    async getProjects() {
+    async projectExists(name: string): Promise<boolean> {
+        const projects = await this.getProjectFolders();
+        return projects.includes(name);
+    }
+
+    getProjectWorkingDirectory(name: string) {
+        return this.#path + '/' + name;
+    }
+
+    async getProject(name: string): Promise<DockerComposeYaml|null> {
+        if (this.#path && this.#exec && await this.projectExists(name)) {
+            try {
+                return <DockerComposeYaml> yaml.load(await this.#exec('cat', [this.#path + '/' + name + '/' + Docker.ConfigFileName]));
+            } catch (e) {
+            }
+        }
+        return null;
+    }
+
+    async getAllProjects() {
         let result: {[key: string]: {
             compose?: DockerComposeYaml
         }} = {};
@@ -42,7 +62,7 @@ export class Applications {
             const folders = await this.getProjectFolders();
             for (const f of folders) {
                 try {
-                    const yamlContent = await this.#exec('cat', [this.#path + '/' + f + '/' + 'docker-compose.yml']);
+                    const yamlContent = await this.#exec('cat', [this.#path + '/' + f + '/' + Docker.ConfigFileName]);
                     result[f] = {
                         compose: <DockerComposeYaml> yaml.load(yamlContent)
                     };

@@ -52,6 +52,7 @@ export class Docker {
     static workingDirLabel = 'com.docker.compose.project.working_dir';
     static configFileNameLabel = 'com.docker.compose.project.config_files';
     static serviceNameLabel = 'com.docker.compose.service';
+    static ConfigFileName = 'docker-compose.yml';
 
     static isContainerNameValid(name: string): boolean {
         return name.match(/^([a-zA-Z_\-1-9]+)$/) != null;
@@ -94,6 +95,14 @@ export class Docker {
         return result;
     }
 
+    async getDockerComposeProject(composeProjectName: string): Promise<ContainerInfo[]|null> {
+        const projects = await this.getDockerComposeProjects();
+        if (composeProjectName in projects) {
+            return projects[composeProjectName];
+        }
+        return null;
+    }
+
     async getDockerComposeFile(composeProjectName: string): Promise<string|null> {
         const containers = await this.getContainers();
         const container_data = await this.inspectContainers(containers);
@@ -106,7 +115,7 @@ export class Docker {
         return null;
     }
 
-    async extractBaseForCustomImage(image: ImageInfo): Promise<string|null> {
+    async extractBaseForCustomImage(image: ImageInfo): Promise<string|undefined> {
         while (image.Parent) {
             image = (await this.inspectImages([image.Parent]))[0];
         }
@@ -114,7 +123,7 @@ export class Docker {
             return image.RepoTags[0];
         }
 
-        return null;
+        return undefined;
     }
 
     static isCustomImage(image: ImageInfo): boolean {

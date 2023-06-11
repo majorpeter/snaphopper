@@ -29,7 +29,7 @@ const props = defineProps<{
               <td class="col-sm-1" :class="classForStatus(item)">{{ item.state }}</td>
             </tr>
           </tbody></table>
-          <div class="alert alert-danger show" role="alert" v-else-if="value.status=='access_error'">
+          <div class="alert alert-warning show mt-3" role="alert" v-else-if="value.status=='access_error'">
             Cannot access docker-compose file!
           </div>
         </div>

@@ -38,20 +38,23 @@ export namespace endpoints {
         };
 
         export interface type {
-            containers: {
-                name: string;
-                service: string;
-                image: {
+            services: {[service_name: string]: {
+                dockerfile_image?: {
+                    name?: string;
+                    url?: string;
+                }
+                existing_image?: {
                     name: string;
-                    hash: string;
-                    url: string|null;
-                    base: string|null;
-                    base_url: string|null;
+                    hash?: string;
+                    url?: string;
+                    base?: string;
+                    base_url?: string;
                 };
-                state: string;
-            }[];
-            working_directory: string;
-            compose_config_file: string;
+                container_name?: string;
+                state: 'N/A' | 'created'|'running'|'paused'|'restarting'|'removing'|'exited'|'dead';
+            }};
+            working_directory?: string;
+            compose_config_file_name?: string;
             zfs_available: boolean;
             zfs_dataset: null|{
                 name: string;
