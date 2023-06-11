@@ -149,7 +149,7 @@
 </div>
 
 <MessageModal ref="message"></MessageModal>
-<DockerComposeFile ref="composeFile" :name="<string> name" :filepath="data.working_directory + '/' + data.compose_config_file_name"></DockerComposeFile>
+<DockerComposeFile ref="composeFile" :name="<string> name" :filepath="data.working_directory + '/' + data.compose_config_file_name" :can-close="!dataReloading" @compose-file-changed="reloadData"></DockerComposeFile>
 <StackSnapshotClone ref="stackSnapshotClone" :dataset-name="data.zfs_dataset?.name"></StackSnapshotClone>
 
 </template>
@@ -175,6 +175,7 @@ export default defineComponent({
         return {
             name: this.$route.params.name,
             data: <endpoints.stack.type> {services: {}},
+            dataReloading: false,
             zfs_snapshots: <endpoints.snapshot.list.resp_type> [],
             dockerComposeExecuting: false,
             createSnapshot: {
@@ -209,7 +210,13 @@ export default defineComponent({
             }
         },
         async reloadData() {
-            this.data = (await ApiClient().get(endpoints.stack.url.replace(':name', <string> this.name))).data;
+            this.dataReloading = true;
+            try {
+                this.data = (await ApiClient().get(endpoints.stack.url.replace(':name', <string> this.name))).data;
+            } catch (e) {
+            } finally {
+                this.dataReloading = false;
+            }
         },
         async dockerComposeUp() {
             if (this.dockerComposeExecuting) {

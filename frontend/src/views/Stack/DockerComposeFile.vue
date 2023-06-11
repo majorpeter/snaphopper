@@ -20,7 +20,7 @@
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="state=='saving'"></span>
                     Save
                 </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" :disabled="state=='saving'">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" :disabled="state=='saving' || !canClose">Close</button>
             </div>
             </div>
         </div>
@@ -36,7 +36,11 @@ import ApiClient from '@/services/ApiClient';
 export default defineComponent({
     props: {
         name: String,
-        filepath: String
+        filepath: String,
+        canClose: Boolean
+    },
+    emits: {
+        'compose-file-changed': null
     },
     data() {
         return {
@@ -62,6 +66,8 @@ export default defineComponent({
             try {
                 await ApiClient().post(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose_file.post_req_type> {content: this.content});
                 this.state = 'idle';
+                this.saved_content = this.content;
+                this.$emit('compose-file-changed');
             } catch (e) {
                 this.state = 'save_error';
             }
