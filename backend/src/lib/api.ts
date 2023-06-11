@@ -72,7 +72,10 @@ export namespace endpoints {
             export type params = {
                 name: string
             };
-            export type resp_type = string|null;
+            export type get_resp_type = string;
+            export type post_req_type = {
+                content: string;
+            };
         }
     }
 

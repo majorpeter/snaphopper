@@ -50,7 +50,8 @@ import ApiClient from '@/services/ApiClient';
 export default defineComponent({
     mounted() {
         this.modal = new Modal(<Element> document.getElementById('modal'), {
-            backdrop: 'static'
+            backdrop: 'static',
+            keyboard: false
         });
     },
     data() {

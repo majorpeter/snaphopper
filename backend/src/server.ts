@@ -58,7 +58,9 @@ async function setupSshConnectionServices() {
 
         docker.setAdapter((command, args) => {return ssh.exec(command, args)});
         zfs.setAdapter((command, args) => {return ssh.exec(command, args)});
-        applications.setAdapter((command, args) => {return ssh.exec(command, args)});
+        applications.setAdapter((command, args, stdin) => {
+            return ssh.exec(command, args, {stdin: stdin});
+        });
     } catch (e: any) {
         console.log(e);
     }

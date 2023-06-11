@@ -19,7 +19,7 @@
             &nbsp;
             <button type="button" class="btn btn-primary" @click="showComposeFileClicked" :disabled="composeFileLoading">
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="composeFileLoading"></span>
-                Show
+                ...
             </button>
         </td>
     </tr><tr>
@@ -172,7 +172,8 @@ export default defineComponent({
     },
     mounted() {
         this.createSnapshot.modal = new Modal(<Element> document.getElementById('snapshotCreateModal'), {
-            backdrop: 'static'
+            backdrop: 'static',
+            keyboard: false
         });
     },
     methods: {

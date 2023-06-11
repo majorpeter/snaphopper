@@ -103,18 +103,6 @@ export class Docker {
         return null;
     }
 
-    async getDockerComposeFile(composeProjectName: string): Promise<string|null> {
-        const containers = await this.getContainers();
-        const container_data = await this.inspectContainers(containers);
-
-        for (const data of container_data) {
-            if (data.Config.Labels[Docker.projectLabel] == composeProjectName) {
-                return this.#exec!('cat', [path.join(data.Config.Labels[Docker.workingDirLabel], data.Config.Labels[Docker.configFileNameLabel])]);
-            }
-        }
-        return null;
-    }
-
     async extractBaseForCustomImage(image: ImageInfo): Promise<string|undefined> {
         while (image.Parent) {
             image = (await this.inspectImages([image.Parent]))[0];

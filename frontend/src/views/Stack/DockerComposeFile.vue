@@ -4,16 +4,23 @@
             <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5">{{  filepath }}</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert" v-if="content.length==0">
+                <div class="alert alert-danger fade show" role="alert" v-if="saved_content.length==0">
                     Cannot access <code>{{ filepath }}</code> or file is empty.
                 </div>
-                <textarea class="form-control" readonly id="composeFileYaml">{{ content }}</textarea>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" v-if="state=='save_error'">
+                    Could not save <code>{{ filepath }}</code>.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @click="state='idle'"></button>
+                </div>
+                <textarea class="form-control" id="composeFileYaml" v-model="content"></textarea>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" @click="save" :disabled="content==saved_content || state=='saving'">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="state=='saving'"></span>
+                    Save
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" :disabled="state=='saving'">Close</button>
             </div>
             </div>
         </div>
@@ -34,20 +41,30 @@ export default defineComponent({
     data() {
         return {
             modal: <Modal> {},
-            content: <string> '',
-            loading: false
+            saved_content: '',
+            content: '',
+            state: <'hidden'|'loading'|'idle'|'saving'|'save_error'> 'hidden'
         }
     },
     mounted() {
-        this.modal = new Modal(<Element> document.getElementById('composeFileModal'));
+        this.modal = new Modal(<Element> document.getElementById('composeFileModal'), {backdrop: 'static', keyboard: false});
     },
     methods: {
         async showComposeFile() {
-            this.loading = true;
-            this.content = <endpoints.stack.docker_compose_file.resp_type> (await ApiClient().get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
-            this.loading = false;
+            this.state = 'loading';
+            this.content = this.saved_content = <endpoints.stack.docker_compose_file.get_resp_type> (await ApiClient().get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
 
             this.modal.show();
+            this.state = 'idle';
+        },
+        async save() {
+            this.state = 'saving';
+            try {
+                await ApiClient().post(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose_file.post_req_type> {content: this.content});
+                this.state = 'idle';
+            } catch (e) {
+                this.state = 'save_error';
+            }
         }
     }
 });

@@ -1,7 +1,7 @@
 import yaml from 'js-yaml';
 import { Docker } from './docker';
 
-export type exec = (command: string, args: string[]) => Promise<string>;
+export type exec = (command: string, args: string[], stdin?: string) => Promise<string>;
 
 export interface DockerComposeYaml {
     version: string;
@@ -45,13 +45,32 @@ export class Applications {
     }
 
     async getProject(name: string): Promise<DockerComposeYaml|null> {
+        const contents = await this.getProjectFileText(name);
+        if (contents) {
+            return <DockerComposeYaml> yaml.load(contents);
+        }
+        return null;
+    }
+
+    async getProjectFileText(name: string): Promise<string|null> {
         if (this.#path && this.#exec && await this.projectExists(name)) {
             try {
-                return <DockerComposeYaml> yaml.load(await this.#exec('cat', [this.#path + '/' + name + '/' + Docker.ConfigFileName]));
+                return await this.#exec('cat', [this.#path + '/' + name + '/' + Docker.ConfigFileName]);
             } catch (e) {
             }
         }
         return null;
+    }
+
+    async writeProjectFile(name: string, contents: string): Promise<boolean> {
+        if (this.#path && this.#exec && await this.projectExists(name)) {
+            try {
+                await this.#exec('tee', [this.#path + '/' + name + '/' + Docker.ConfigFileName], contents);
+                return true;
+            } catch (e) {
+            }
+        }
+        return false;
     }
 
     async getAllProjects() {
