@@ -8,9 +8,14 @@ import StackListItem from '../components/StackListItem.vue';
     <StackListItem v-for="key in Object.keys(stacks.projects).sort()" :name="key" :value="stacks.projects[key]"></StackListItem>
   </div>
 
-  <div class="alert alert-danger fade show" role="alert" v-else-if="loaded">
+  <div class="alert alert-danger fade show" role="alert" v-else-if="state == 'loaded'">
     Failed to connect to Docker host. Please check <router-link class="alert-link" :to="{name: 'config'}">Config</router-link> for errors.
   </div>
+
+  <div class="spinner-border text-primary" role="status" v-if="state=='loading'">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+
 </div>
 </template>
 
@@ -23,14 +28,21 @@ export default defineComponent({
   data() {
     return {
       stacks: <endpoints.stack_list.type> {},
-      loaded: false
+      state: <'loading'|'loaded'> 'loading'
     };
   },
   methods: {
   },
   async created() {
     this.stacks = (await ApiClient().get(endpoints.stack_list.url)).data;
-    this.loaded = true;
+    this.state = 'loaded';
   }
 });
 </script>
+
+<style scoped>
+div.spinner-border {
+  width: 150px;
+  height: 150px;
+}
+</style>
