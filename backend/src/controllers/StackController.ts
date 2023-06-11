@@ -140,7 +140,7 @@ export default function(app: Express, docker: Docker, applications: Applications
         }
     });
 
-    app.get<endpoints.stack.docker_compose_file.params>(endpoints.stack.docker_compose_file.url, authenticationRequred, async (req, res) => {
+    app.get<endpoints.stack.docker_compose_file.params, endpoints.stack.docker_compose_file.resp_type>(endpoints.stack.docker_compose_file.url, authenticationRequred, async (req, res) => {
         if (docker.available) {
             res.contentType('yaml');
             res.send(await docker.getDockerComposeFile(req.params.name));

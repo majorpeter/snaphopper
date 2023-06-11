@@ -7,6 +7,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" v-if="content.length==0">
+                    Cannot access <code>{{ filepath }}</code> or file is empty.
+                </div>
                 <textarea class="form-control" readonly id="composeFileYaml">{{ content }}</textarea>
             </div>
             <div class="modal-footer">
@@ -31,7 +34,7 @@ export default defineComponent({
     data() {
         return {
             modal: <Modal> {},
-            content: <string|null> null,
+            content: <string> '',
             loading: false
         }
     },
@@ -41,7 +44,7 @@ export default defineComponent({
     methods: {
         async showComposeFile() {
             this.loading = true;
-            this.content = (await ApiClient().get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
+            this.content = <endpoints.stack.docker_compose_file.resp_type> (await ApiClient().get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
             this.loading = false;
 
             this.modal.show();
