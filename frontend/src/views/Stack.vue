@@ -17,8 +17,8 @@
         <td v-if="data.compose_config_file_name">
             <code>{{ data.compose_config_file_name }}</code>
             &nbsp;
-            <button type="button" class="btn btn-primary" @click="showComposeFile" :disabled="composeFile.loading">
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="composeFile.loading"></span>
+            <button type="button" class="btn btn-primary" @click="showComposeFileClicked" :disabled="composeFileLoading">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="composeFileLoading"></span>
                 Show
             </button>
         </td>
@@ -98,24 +98,6 @@
 </div>
 </template>
 
-<!-- Modal for docker-compose file display -->
-<div class="modal modal-lg fade" id="composeFileModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5">{{ data.working_directory}}/{{ data.compose_config_file_name }}</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea class="form-control" readonly id="composeFileYaml">{{ composeFile.content }}</textarea>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Modal for snapshot creation -->
 <div class="modal fade" id="snapshotCreateModal" ref="snapshotCreateModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
@@ -152,6 +134,7 @@
   </div>
 </div>
 
+<DockerComposeFile ref="composeFile" :name="<string> name" :filepath="data.working_directory + '/' + data.compose_config_file_name"></DockerComposeFile>
 <StackSnapshotClone ref="stackSnapshotClone" :dataset-name="data.zfs_dataset?.name"></StackSnapshotClone>
 
 </template>
@@ -161,12 +144,14 @@ import { defineComponent } from 'vue';
 import { AxiosError } from "axios";
 import { endpoints } from '@api';
 import { Modal } from 'bootstrap';
+import DockerComposeFile from './Stack/DockerComposeFile.vue';
 import StackSnapshotClone from './Stack/StackSnapshotClone.vue';
 import ApiClient from '@/services/ApiClient';
 import containerStatusColor from '@/services/ContainerStatusColor';
 
 export default defineComponent({
     components: {
+        DockerComposeFile,
         StackSnapshotClone
     },
     data() {
@@ -174,11 +159,6 @@ export default defineComponent({
             name: this.$route.params.name,
             data: <endpoints.stack.type> {services: {}},
             zfs_snapshots: <endpoints.snapshot.list.resp_type> [],
-            composeFile: {
-                modal: <Modal> {},
-                content: <string|null> null,
-                loading: false
-            },
             createSnapshot: {
                 modal: <Modal> {},
                 model: {
@@ -191,7 +171,6 @@ export default defineComponent({
         }
     },
     mounted() {
-        this.composeFile.modal = new Modal(<Element> document.getElementById('composeFileModal'));
         this.createSnapshot.modal = new Modal(<Element> document.getElementById('snapshotCreateModal'), {
             backdrop: 'static'
         });
@@ -210,13 +189,6 @@ export default defineComponent({
                 });
             }
         },
-        async showComposeFile() {
-            this.composeFile.loading = true;
-            this.composeFile.content = (await ApiClient().get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
-            this.composeFile.loading = false;
-
-            this.composeFile.modal.show();
-        },
         showSnapshotCreateDialog() {
             // TODO get suggestion from backend
             const now = new Date();
@@ -230,6 +202,9 @@ export default defineComponent({
             }
 
             this.createSnapshot.modal.show();
+        },
+        async showComposeFileClicked() {
+            (<typeof DockerComposeFile> this.$refs.composeFile).showComposeFile();
         },
         async createSnapshotBtnClicked() {
             this.createSnapshot.state = 'creating';
@@ -253,6 +228,11 @@ export default defineComponent({
         },
         containerStatusColor: containerStatusColor
     },
+    computed: {
+        composeFileLoading() {
+            return (<typeof DockerComposeFile> this.$refs.composeFile).loading;
+        }
+    },
     async beforeRouteEnter(to, from, next) {
         let promise = ApiClient().get(endpoints.stack.url.replace(':name', <string> to.params.name));
 
@@ -265,10 +245,3 @@ export default defineComponent({
     }
 });
 </script>
-
-<style scoped>
-textarea#composeFileYaml {
-    height: 400px;
-    font-family: monospace;
-}
-</style>
