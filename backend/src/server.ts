@@ -60,15 +60,19 @@ async function setupSshConnectionServices() {
 
         docker.setAdapter((command, args) => {return ssh.exec(command, args)});
         zfs.setAdapter((command, args) => {return ssh.exec(command, args)});
-        applications.setAdapter(async (command, args, options?: {stdin?: string, working_dir?: string, stdout_stderr_merge?: boolean}) => {
+        applications.setAdapter(async (command, args, options?: {
+            stdin?: string,
+            working_dir?: string,
+            onStdout?: (chunk: Buffer) => void,
+            onStderr?: (chunk: Buffer) => void
+        }) => {
             const result = (await ssh.exec(command, args, {
                 stdin: options?.stdin,
                 cwd: options?.working_dir,
-                stream: 'both'
+                stream: 'both',
+                onStdout: options?.onStdout,
+                onStderr: options?.onStderr
             }));
-            if (options?.stdout_stderr_merge) {
-                return result.stdout + result.stderr;
-            }
             return result.stdout;
         });
     } catch (e: any) {

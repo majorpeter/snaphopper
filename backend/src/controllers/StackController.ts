@@ -192,4 +192,21 @@ export default function(app: Express, docker: Docker, applications: Applications
             res.sendStatus(500);
         }
     });
+
+    app.get<endpoints.stack.docker_compose.logs.params>(endpoints.stack.docker_compose.logs.url, (req, res) => {
+        if (docker.available) {
+            res.writeHead(200, {
+                "Content-Type": "text/event-stream",
+                "Cache-Control": "no-cache",
+                "Content-Encoding": "none"
+            });
+
+            applications.composeLogs(req.params.name, (chunk: Buffer) => {
+                res.write(chunk);
+            }).then(() => {
+            });
+        } else {
+            res.sendStatus(500);
+        }
+    });
 };

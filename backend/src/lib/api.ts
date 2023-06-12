@@ -88,6 +88,13 @@ export namespace endpoints {
                 command: 'up'|'down';
             };
             export type post_resp_type = string;
+
+            export namespace logs {
+                export const url = "/api/stack/:name/compose/logs";
+                export type params = {
+                    name: string
+                };
+            }
         }
     }
 

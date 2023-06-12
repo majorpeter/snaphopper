@@ -10,6 +10,8 @@
     <ul class="dropdown-menu dropdown-menu-end">
         <li><a class="dropdown-item" :class="dockerComposeExecuting ? 'disabled' : ''" title="Start or recreate services" @click="dockerComposeUp" href="#">Up</a></li>
         <li><a class="dropdown-item" :class="dockerComposeExecuting ? 'disabled' : ''" title="Stop services" @click="dockerComposeDown" href="#">Down</a></li>
+        <div class="dropdown-divider"></div>
+        <li><a class="dropdown-item disabled" title="Watch logs" @click="dockerComposeLogsWatch" href="#">Logs</a></li>
     </ul>
 </h3>
 
@@ -264,6 +266,14 @@ export default defineComponent({
                 (<typeof MessageModal> this.$refs.message).show('"docker-compose down" failed', 'Command failed');
             }
             this.dockerComposeExecuting = false;
+        },
+        dockerComposeLogsWatch() {
+            const messageModal = <typeof MessageModal> this.$refs.message;
+            messageModal.showConsole('Logs');
+            ApiClient().get(endpoints.stack.docker_compose.logs.url.replace(':name', <string> this.name), {
+                onDownloadProgress(progressEvent) {
+                    messageModal.consoleOutput = progressEvent.event.currentTarget.response;
+                }});
         },
         showSnapshotCreateDialog() {
             // TODO get suggestion from backend

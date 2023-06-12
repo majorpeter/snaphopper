@@ -4,7 +4,8 @@ import { Docker } from './docker';
 export type exec = (command: string, args: string[], options?: {
     stdin?: string,
     working_dir?: string,
-    stdout_stderr_merge?: boolean
+    onStdout?: (chunk: Buffer) => void,
+    onStderr?: (chunk: Buffer) => void
 }) => Promise<string>;
 
 export interface DockerComposeYaml {
@@ -101,7 +102,6 @@ export class Applications {
         if (this.path && this.exec && await this.projectExists(name)) {
             return await this.exec('docker-compose', ['--no-ansi', 'up', '-d'], {
                 working_dir: this.path + '/' + name,
-                stdout_stderr_merge: true
             });
         }
         return null;
@@ -111,9 +111,18 @@ export class Applications {
         if (this.path && this.exec && await this.projectExists(name)) {
             return await this.exec('docker-compose', ['--no-ansi', 'down'], {
                 working_dir: this.path + '/' + name,
-                stdout_stderr_merge: true
             });
         }
         return null;
+    }
+
+    //TODO stop watching when finished
+    async composeLogs(name: string, onStdout: (chunk: Buffer) => void) {
+        if (this.path && this.exec && await this.projectExists(name)) {
+            this.exec('docker-compose', ['--no-ansi', 'logs', '--follow'], {
+                working_dir: this.path + '/' + name,
+                onStdout: onStdout
+            });
+        }
     }
 }
