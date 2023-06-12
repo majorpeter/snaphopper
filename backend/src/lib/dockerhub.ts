@@ -1,4 +1,4 @@
-import axios, { Axios, AxiosError, AxiosResponseHeaders } from 'axios'
+import axios, { AxiosResponseHeaders } from 'axios'
 
 export namespace DockerHub {
     export type ManifestResponse = {
@@ -56,26 +56,26 @@ export namespace DockerHub {
             imageLocal= imageName + ':latest';
         }
 
-        const supportedType = {
+        const supportedContentTypes = {
             dockerManifest: 'application/vnd.docker.distribution.manifest.v2+json',
             ociImageIndex: 'application/vnd.oci.image.index.v1+json'
         };
         const manifestResp = await axios.get(`https://${imageRegistryApi}/v2/${imagePath}/manifests/${imageTag}`, {headers: {
-            'Accept': Object.values(supportedType).join(', '),
+            'Accept': Object.values(supportedContentTypes).join(', '),
             'Authorization':  `Bearer ${await getAuthToken(imagePath)}`
         }});
 
         const contentType = (<AxiosResponseHeaders> manifestResp.headers).getContentType()?.toString();
-        if (contentType == supportedType.dockerManifest) {
+        if (contentType == supportedContentTypes.dockerManifest) {
             return {dockerManifest: manifestResp.data};
-        } else if (contentType == supportedType.ociImageIndex) {
+        } else if (contentType == supportedContentTypes.ociImageIndex) {
             return {ociImageIndex: manifestResp.data};
         }
         return {};
     }
 
     export async function getManifestByReference(reference: string) {
-        const supportedType = {
+        const supportedContentTypes = {
             dockerManifest: 'application/vnd.docker.distribution.manifest.v2+json',
             ociImageIndex: 'application/vnd.oci.image.index.v1+json'
         };
@@ -84,14 +84,14 @@ export namespace DockerHub {
         const imagePath = reference.split('@')[0];
         const imageDigest = reference.split('@')[1];
         const manifestResp = await axios.get(`https://${imageRegistryApi}/v2/${imagePath}/manifests/${imageDigest}`, {headers: {
-            'Accept': Object.values(supportedType).join(', '),
+            'Accept': Object.values(supportedContentTypes).join(', '),
             'Authorization':  `Bearer ${await getAuthToken(imagePath)}`
         }});
 
         const contentType = (<AxiosResponseHeaders> manifestResp.headers).getContentType()?.toString();
-        if (contentType == supportedType.dockerManifest) {
+        if (contentType == supportedContentTypes.dockerManifest) {
             return {dockerManifest: manifestResp.data};
-        } else if (contentType == supportedType.ociImageIndex) {
+        } else if (contentType == supportedContentTypes.ociImageIndex) {
             return {ociImageIndex: manifestResp.data};
         }
         return {};

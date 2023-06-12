@@ -1,16 +1,16 @@
 export type exec = (command: string, args: string[]) => Promise<string>;
 
 export class Zfs {
-    #exec: exec|undefined;
-    #available: boolean = false;
+    private exec: exec|undefined;
+    private zfsAvailable: boolean = false;
 
     setAdapter(exec: exec|undefined) {
-        this.#available = false;
-        this.#exec = exec;
+        this.zfsAvailable = false;
+        this.exec = exec;
 
-        if (this.#exec) {
-            this.#exec('sudo', ['zfs', 'list']).then(() => {
-                this.#available = true;
+        if (this.exec) {
+            this.exec('sudo', ['zfs', 'list']).then(() => {
+                this.zfsAvailable = true;
             }).catch(() => {
                 console.log('ZFS functionality not available.');
             });
@@ -18,12 +18,12 @@ export class Zfs {
     }
 
     public get available(): boolean {
-        return this.#available;
+        return this.zfsAvailable;
     }
 
     async getMountPoints(): Promise<{[key: string]: string}> {
         let result = <{[key: string]: string}>{};
-        const output = await this.#exec!('sudo', ['zfs', 'list', '-H', '-o', 'name,mountpoint']);
+        const output = await this.exec!('sudo', ['zfs', 'list', '-H', '-o', 'name,mountpoint']);
         for (const line of output.split('\n')) {
             const parts = line.split('\t');
             result[parts[0]] = parts[1];
@@ -41,7 +41,7 @@ export class Zfs {
         used: string;
         referenced: string;
     }> {
-        const output = (await this.#exec!('sudo', ['zfs', 'list', '-H', '-o', 'used,referenced', dataset])).split('\t');
+        const output = (await this.exec!('sudo', ['zfs', 'list', '-H', '-o', 'used,referenced', dataset])).split('\t');
         return {
             used: output[0],
             referenced: output[1]
@@ -58,7 +58,7 @@ export class Zfs {
             used: string;
             referenced: string;
         }[] = [];
-        const output = await this.#exec!('sudo', ['zfs', 'list', '-H', '-o', 'name,used,referenced', '-t', 'snapshot', dataset]);
+        const output = await this.exec!('sudo', ['zfs', 'list', '-H', '-o', 'name,used,referenced', '-t', 'snapshot', dataset]);
         if (output.length > 0) {
             for (const line of output.split('\n')) {
                 const parts = line.split('\t');
@@ -73,11 +73,11 @@ export class Zfs {
     }
 
     async createSnapshot(dataset: string, snapshotName: string) {
-        await this.#exec!('sudo', ['zfs', 'snapshot', dataset + '@' + snapshotName]);
+        await this.exec!('sudo', ['zfs', 'snapshot', dataset + '@' + snapshotName]);
     }
 
     async cloneSnapshotToDataset(dataset: string, snapshotName: string, clonedDataset: string) {
-        await this.#exec!('sudo', ['zfs', 'clone', dataset + '@' + snapshotName, clonedDataset]);
+        await this.exec!('sudo', ['zfs', 'clone', dataset + '@' + snapshotName, clonedDataset]);
     }
 
     /**

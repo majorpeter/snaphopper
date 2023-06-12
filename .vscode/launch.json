@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Backend dev-server",
+            "request": "launch",
+            "runtimeArgs": [
+                "run-script",
+                "dev"
+            ],
+            "cwd": "${workspaceFolder}/backend",
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        }
+    ]
+}

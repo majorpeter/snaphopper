@@ -1,5 +1,3 @@
-import path from 'path';
-
 export type exec = (command: string, args: string[]) => Promise<string>;
 
 export interface ContainerInfo {
@@ -46,7 +44,7 @@ export interface ImageInfo {
 };
 
 export class Docker {
-    #exec: exec|undefined;
+    private exec: exec|undefined;
 
     static projectLabel = 'com.docker.compose.project';
     static workingDirLabel = 'com.docker.compose.project.working_dir';
@@ -59,23 +57,23 @@ export class Docker {
     }
 
     setAdapter(exec: exec|undefined) {
-        this.#exec = exec;
+        this.exec = exec;
     }
 
     public get available(): boolean {
-        return this.#exec !== undefined;
+        return this.exec !== undefined;
     }
 
     async getContainers(): Promise<string[]> {
-        return (await this.#exec!('docker', ['container', 'ls', '--format', '{{.Names}}'])).split('\n');
+        return (await this.exec!('docker', ['container', 'ls', '--format', '{{.Names}}'])).split('\n');
     }
 
     async inspectContainers(names: string[]): Promise<ContainerInfo[]> {
-        return JSON.parse(await this.#exec!('docker', ['container', 'inspect', ...names]));
+        return JSON.parse(await this.exec!('docker', ['container', 'inspect', ...names]));
     }
 
     async inspectImages(names: string[]): Promise<[ImageInfo]> {
-        return JSON.parse(await this.#exec!('docker', ['image', 'inspect', ...names]));
+        return JSON.parse(await this.exec!('docker', ['image', 'inspect', ...names]));
     }
 
     async getDockerComposeProjects(): Promise<{[key: string]: ContainerInfo[]}> {

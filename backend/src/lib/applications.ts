@@ -18,20 +18,20 @@ export interface DockerComposeYaml {
 };
 
 export class Applications {
-    #exec: exec|undefined;
-    #path: string|undefined;
+    private exec: exec|undefined;
+    private path: string|undefined;
 
     setPath(path?: string) {
-        this.#path = path;
+        this.path = path;
     }
 
     setAdapter(exec: exec|undefined) {
-        this.#exec = exec;
+        this.exec = exec;
     }
 
     async getProjectFolders(): Promise<string[]> {
-        if (this.#path && this.#exec) {
-            const output = (await this.#exec('ls', ['-F1', this.#path])).split('\n');
+        if (this.path && this.exec) {
+            const output = (await this.exec('ls', ['-F1', this.path])).split('\n');
             return output
                 .filter((value) => value.endsWith('/'))
                 .map((value) => value.substring(0, value.length - 1));
@@ -45,7 +45,7 @@ export class Applications {
     }
 
     getProjectWorkingDirectory(name: string) {
-        return this.#path + '/' + name;
+        return this.path + '/' + name;
     }
 
     async getProject(name: string): Promise<DockerComposeYaml|null> {
@@ -57,9 +57,9 @@ export class Applications {
     }
 
     async getProjectFileText(name: string): Promise<string|null> {
-        if (this.#path && this.#exec && await this.projectExists(name)) {
+        if (this.path && this.exec && await this.projectExists(name)) {
             try {
-                return await this.#exec('cat', [this.#path + '/' + name + '/' + Docker.ConfigFileName]);
+                return await this.exec('cat', [this.path + '/' + name + '/' + Docker.ConfigFileName]);
             } catch (e) {
             }
         }
@@ -67,9 +67,9 @@ export class Applications {
     }
 
     async writeProjectFile(name: string, contents: string): Promise<boolean> {
-        if (this.#path && this.#exec && await this.projectExists(name)) {
+        if (this.path && this.exec && await this.projectExists(name)) {
             try {
-                await this.#exec('tee', [this.#path + '/' + name + '/' + Docker.ConfigFileName], {stdin: contents});
+                await this.exec('tee', [this.path + '/' + name + '/' + Docker.ConfigFileName], {stdin: contents});
                 return true;
             } catch (e) {
             }
@@ -81,11 +81,11 @@ export class Applications {
         let result: {[key: string]: {
             compose?: DockerComposeYaml
         }} = {};
-        if (this.#path && this.#exec) {
+        if (this.path && this.exec) {
             const folders = await this.getProjectFolders();
             for (const f of folders) {
                 try {
-                    const yamlContent = await this.#exec('cat', [this.#path + '/' + f + '/' + Docker.ConfigFileName]);
+                    const yamlContent = await this.exec('cat', [this.path + '/' + f + '/' + Docker.ConfigFileName]);
                     result[f] = {
                         compose: <DockerComposeYaml> yaml.load(yamlContent)
                     };
@@ -98,9 +98,9 @@ export class Applications {
     }
 
     async composeUp(name: string): Promise<string|null> {
-        if (this.#path && this.#exec && await this.projectExists(name)) {
-            return await this.#exec('docker-compose', ['--no-ansi', 'up', '-d'], {
-                working_dir: this.#path + '/' + name,
+        if (this.path && this.exec && await this.projectExists(name)) {
+            return await this.exec('docker-compose', ['--no-ansi', 'up', '-d'], {
+                working_dir: this.path + '/' + name,
                 stdout_stderr_merge: true
             });
         }
@@ -108,9 +108,9 @@ export class Applications {
     }
 
     async composeDown(name: string): Promise<string|null> {
-        if (this.#path && this.#exec && await this.projectExists(name)) {
-            return await this.#exec('docker-compose', ['--no-ansi', 'down'], {
-                working_dir: this.#path + '/' + name,
+        if (this.path && this.exec && await this.projectExists(name)) {
+            return await this.exec('docker-compose', ['--no-ansi', 'down'], {
+                working_dir: this.path + '/' + name,
                 stdout_stderr_merge: true
             });
         }

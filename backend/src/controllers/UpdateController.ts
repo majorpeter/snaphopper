@@ -12,7 +12,7 @@ class UpdateChecker {
 
     static max_cache_age_ms = 5 * 60 * 1000;
 
-    async #fetchLatestHashForImage(image_name: string): Promise<boolean> {
+    private async fetchLatestHashForImage(image_name: string): Promise<boolean> {
         try {
             const manifest = (await DockerHub.getManifest(image_name));
 
@@ -36,7 +36,7 @@ class UpdateChecker {
         return false;
     }
 
-    #isCached(image_name: string): boolean {
+    private isCached(image_name: string): boolean {
         if (Object.keys(this.cache).includes(image_name)) {
             const age = new Date().getTime() - this.cache[image_name].check_timestamp;
             if (age < UpdateChecker.max_cache_age_ms) {
@@ -74,8 +74,8 @@ class UpdateChecker {
         }
 
         const image_name = image_name_with_tag.split(':')[0];
-        if (!this.#isCached(image_name)) {
-            if (!await this.#fetchLatestHashForImage(image_name)) {
+        if (!this.isCached(image_name)) {
+            if (!await this.fetchLatestHashForImage(image_name)) {
                 return 'error'
             }
         }
