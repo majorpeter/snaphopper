@@ -92,4 +92,29 @@ export default function (app: Express, zfs: Zfs) {
             });
         }
     });
+
+    app.post<{}, {}, endpoints.snapshot.rollback.req_type>(endpoints.snapshot.rollback.url, async (req, res) => {
+        if (zfs.available) {
+            if (!Zfs.isPathValid(req.body.dataset_path)) {
+                res.status(400);
+                res.send(<endpoints.snapshot.rollback.error_resp_type> {
+                    message: 'Original dataset path is not valid.'
+                });
+                return;
+            }
+
+            if (!Zfs.isNameValid(req.body.snapshot_name)) {
+                res.status(400);
+                res.send(<endpoints.snapshot.rollback.error_resp_type> {
+                    message: 'Snapshot name is not valid.'
+                });
+                return;
+            }
+
+            await zfs.rollbackSnapshot(req.body.dataset_path, req.body.snapshot_name);
+            res.sendStatus(200);
+        } else {
+            res.sendStatus(500);
+        }
+    });
 }

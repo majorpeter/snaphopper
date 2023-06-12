@@ -116,7 +116,8 @@
             <p>Used: <strong>{{ snapshot.used }}</strong></p>
             <p>Referenced: <strong>{{ snapshot.referenced }}</strong></p>
 
-            <button @click="cloneSnapshotClicked(snapshot.name)" class="btn btn-primary">Clone</button>
+            <button @click="cloneSnapshotClicked(snapshot.name)" class="btn btn-primary me-1">Clone</button>
+            <button @click="rollbackSnapshotClicked(snapshot.name)" class="btn btn-primary me-1">Rollback</button>
         </div>
     </div>
     </div>
@@ -341,6 +342,19 @@ export default defineComponent({
         },
         cloneSnapshotClicked(snapshot: string) {
             (<typeof StackSnapshotClone> this.$refs.stackSnapshotClone).show(snapshot);
+        },
+        rollbackSnapshotClicked(snapshot: string) {
+            const messageModal = <typeof MessageModal> this.$refs.message;
+            messageModal.showYesNo('Confirm',
+                `Restore snapshot "${snapshot}"? This will destroy the dataset's current contents.`,
+                async () => {
+                    await this.dockerComposeDown();
+                    await ApiClient().post<any, any, endpoints.snapshot.rollback.req_type>(endpoints.snapshot.rollback.url, {
+                        dataset_path: this.data.zfs_dataset!.name,
+                        snapshot_name: snapshot
+                    });
+                    await this.dockerComposeUp();
+                });
         },
         containerStatusColor: containerStatusColor
     },

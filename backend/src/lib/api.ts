@@ -136,6 +136,19 @@ export namespace endpoints {
                 message: string;
             }
         }
+
+        export namespace rollback {
+            export const url = '/api/snapshot/rollback';
+
+            export interface req_type {
+                dataset_path: string;
+                snapshot_name: string;
+            }
+
+            export interface error_resp_type {
+                message: string;
+            }
+        }
     }
 
     export namespace updates {

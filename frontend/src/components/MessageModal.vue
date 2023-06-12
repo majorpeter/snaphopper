@@ -14,8 +14,12 @@
         <p v-else>{{ text }}</p>
         <textarea ref="consoleView" class="form-control" v-if="consoleOutput!==null" readonly></textarea>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <div class="modal-footer text-center">
+        <template v-if="mode=='yesno'">
+          <button type="button" class="btn btn-primary" @click="onYesClicked">Yes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        </template>
+        <button v-else type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -33,8 +37,10 @@ export default defineComponent({
             text: '',
             html: '',
             showSpinner: false,
+            mode: <'message'|'yesno'> 'message',
             consoleOutput: <string|null> null,
-            modal: <Modal> {}
+            modal: <Modal> {},
+            onYesClicked: () => {}
         }
     },
     mounted() {
@@ -46,6 +52,7 @@ export default defineComponent({
             this.text = text;
             this.html = '';
             this.consoleOutput = null;
+            this.mode = 'message';
 
             this.modal.show();
         },
@@ -54,6 +61,7 @@ export default defineComponent({
             this.text = '';
             this.html = html;
             this.consoleOutput = null;
+            this.mode = 'message';
 
             this.modal.show();
         },
@@ -62,6 +70,21 @@ export default defineComponent({
             this.text = '';
             this.html = '';
             this.consoleOutput = '';
+            this.mode = 'message';
+
+            this.modal.show();
+        },
+        showYesNo(title: string, text: string, yesCallback: () => Promise<void>) {
+            this.title = title;
+            this.text = text;
+            this.html = '';
+            this.consoleOutput = null;
+
+            this.mode = 'yesno';
+            this.onYesClicked = async () => {
+              await yesCallback();
+              this.modal.hide();
+            };
 
             this.modal.show();
         }
@@ -84,6 +107,10 @@ export default defineComponent({
 </script>
 
 <style scoped>
+div.modal-footer {
+  justify-content: center;
+}
+
 textarea {
   height: 600px;
   font-family: monospace;
