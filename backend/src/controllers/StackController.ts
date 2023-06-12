@@ -1,7 +1,7 @@
 import { Express } from 'express';
 import { authenticationRequred } from '../lib/policies';
 import { endpoints } from '../lib/api';
-import { Docker } from '../lib/docker';
+import { Docker, ImageInfo } from '../lib/docker';
 import { Zfs } from '../lib/zfs';
 import { DockerHub } from '../lib/dockerhub';
 import { Applications } from '../lib/applications';
@@ -75,11 +75,18 @@ export default function(app: Express, docker: Docker, applications: Applications
                 try {
                     if (project) {
                         for (const service_name of Object.keys(project.services)) {
-                            const image = project.services[service_name].image;
+                            const image_name = project.services[service_name].image;
+                            let image_data: ImageInfo[] = [];
+                            if (image_name) {
+                                try {
+                                    image_data = await docker.inspectImages([image_name]);
+                                } catch (e) {}
+                            }
                             data.services[service_name] = {
                                 dockerfile_image: {
-                                    name: image,
-                                    url: image ? DockerHub.getUrl(image.split(':')[0]) : undefined
+                                    name: image_name,
+                                    url: image_name ? DockerHub.getUrl(image_name.split(':')[0]) : undefined,
+                                    hash: image_data.length ? image_data[0].RepoDigests[0] : undefined
                                 },
                                 status: 'N/A'
                             };

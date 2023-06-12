@@ -19,13 +19,24 @@ export default defineComponent({
             status: <endpoints.updates.resp_type['state'] | 'unknown'> 'unknown'
         }
     },
-    async mounted() {
-        this.status = (<endpoints.updates.resp_type> (await ApiClient().get(endpoints.updates.url, {
+    mounted() {
+        this.checkUpdate();
+    },
+    methods: {
+        async checkUpdate() {
+            this.status = (<endpoints.updates.resp_type> (await ApiClient().get(endpoints.updates.url, {
             params: <endpoints.updates.query> {
                 image_name: this.image_name,
                 current_hash: this.current_hash
             }
         })).data).state;
+        }
+    },
+    watch: {
+        // fetch again if docker-compose file was edited
+        current_hash(_newVal, _oldVal) {
+            this.checkUpdate();
+        }
     }
 });
 </script>

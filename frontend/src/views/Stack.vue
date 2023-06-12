@@ -82,7 +82,9 @@
             </template>
         </template>
         <template v-else-if="i.dockerfile_image?.name">
-            <a :href="i.dockerfile_image?.url" target="_blank">{{ i.dockerfile_image?.name }}</a>
+            <a :href="i.dockerfile_image.url" target="_blank">{{ i.dockerfile_image?.name }}</a>
+            <UpdateCheckBadge v-if="i.dockerfile_image.hash" :image_name="i.dockerfile_image.name" :current_hash="i.dockerfile_image.hash"></UpdateCheckBadge>
+            <span v-else class="badge bg-info ms-2">Not available</span>
         </template>
         <span v-else>custom</span>
     </td>

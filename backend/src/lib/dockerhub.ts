@@ -1,12 +1,33 @@
-import axios, { Axios, AxiosError } from 'axios'
+import axios, { Axios, AxiosError, AxiosResponseHeaders } from 'axios'
 
 export namespace DockerHub {
+    export type ManifestResponse = {
+        dockerManifest?: {
+            schemaVersion: '2',
+            config: {
+                size: number,
+                digest: string
+            }
+        },
+        ociImageIndex?: {
+            schemaVersion: 2,
+            manifests: {
+                digest: string;
+                mediaType: string;
+                platform: {
+                    architecture: string;
+                    os: string;
+                };
+            }[];
+        }
+    };
+
     /**
      * @see https://gitlab.com/MatthiasLohr/omnibus-gitlab-management-scripts/-/blob/main/docker-image-update-check.sh
      */
-    export async function getManifest(imageName: string) {
+    export async function getManifest(imageName: string): Promise<ManifestResponse> {
         if (imageName.split(':')[0].split('/')[0].indexOf('.') != -1) {
-            return null;    // custom registry not supported
+            return {};    // custom registry not supported
         }
 
         let imageRegistry: string;
@@ -35,12 +56,45 @@ export namespace DockerHub {
             imageLocal= imageName + ':latest';
         }
 
+        const supportedType = {
+            dockerManifest: 'application/vnd.docker.distribution.manifest.v2+json',
+            ociImageIndex: 'application/vnd.oci.image.index.v1+json'
+        };
         const manifestResp = await axios.get(`https://${imageRegistryApi}/v2/${imagePath}/manifests/${imageTag}`, {headers: {
-            'Accept': 'application/vnd.docker.distribution.manifest.v2+json',
+            'Accept': Object.values(supportedType).join(', '),
             'Authorization':  `Bearer ${await getAuthToken(imagePath)}`
         }});
 
-        return manifestResp.data;
+        const contentType = (<AxiosResponseHeaders> manifestResp.headers).getContentType()?.toString();
+        if (contentType == supportedType.dockerManifest) {
+            return {dockerManifest: manifestResp.data};
+        } else if (contentType == supportedType.ociImageIndex) {
+            return {ociImageIndex: manifestResp.data};
+        }
+        return {};
+    }
+
+    export async function getManifestByReference(reference: string) {
+        const supportedType = {
+            dockerManifest: 'application/vnd.docker.distribution.manifest.v2+json',
+            ociImageIndex: 'application/vnd.oci.image.index.v1+json'
+        };
+
+        const imageRegistryApi = "registry-1.docker.io";
+        const imagePath = reference.split('@')[0];
+        const imageDigest = reference.split('@')[1];
+        const manifestResp = await axios.get(`https://${imageRegistryApi}/v2/${imagePath}/manifests/${imageDigest}`, {headers: {
+            'Accept': Object.values(supportedType).join(', '),
+            'Authorization':  `Bearer ${await getAuthToken(imagePath)}`
+        }});
+
+        const contentType = (<AxiosResponseHeaders> manifestResp.headers).getContentType()?.toString();
+        if (contentType == supportedType.dockerManifest) {
+            return {dockerManifest: manifestResp.data};
+        } else if (contentType == supportedType.ociImageIndex) {
+            return {ociImageIndex: manifestResp.data};
+        }
+        return {};
     }
 
     export async function getImageTags(name: string): Promise<string[]> {
@@ -67,6 +121,7 @@ export namespace DockerHub {
     }
 
     export function getUrl(name: string): string {
+        //TODO handle ghcr.io
         if (name.indexOf('/') != -1) {
             return 'https://hub.docker.com/r/' + name;
         } else {

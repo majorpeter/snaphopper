@@ -26,7 +26,6 @@ export namespace endpoints {
                         custom_build: boolean;
                         status: DockerContainerStatus;
                     }[];
-                    //TODO updateAvailable: boolean;
                 }
             };
         };
@@ -44,6 +43,7 @@ export namespace endpoints {
                 dockerfile_image?: {
                     name?: string;
                     url?: string;
+                    hash?: string;
                 }
                 existing_image?: {
                     name: string;
