@@ -37,8 +37,11 @@ export default function(app: Express, docker: Docker, applications: Applications
                             };
 
                             if (running_service_container) {
-                                service_record.image_name = running_service_container?.Config.Image;
-                                service_record.image_hash = running_service_container?.Image;
+                                service_record.image_name = running_service_container.Config.Image;
+                                service_record.image_hash = running_service_container.Image;
+
+                                const image = (await docker.inspectImages([running_service_container.Image]))[0];
+                                service_record.custom_build = Docker.isCustomImage(image);
                             } else {
                                 service_record.image_name = service_config.image;
                             }

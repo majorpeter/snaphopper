@@ -24,7 +24,10 @@ const props = defineProps<{
               </td>
               <td class="col-sm-4" :title="item.image_hash">
                 <em v-if="item.custom_build">custom build</em>
-                <template v-else="item.image_name">{{ item.image_name }}</template>
+                <template v-else="item.image_name">
+                  {{ item.image_name }}
+                  <UpdateCheckBadge :image_name="item.image_name" :current_hash="item.image_hash" v-if="item.image_hash"></UpdateCheckBadge>
+                </template>
               </td>
               <td class="col-sm-1" :class="containerStatusColor(item.status)">{{ item.status }}</td>
             </tr>
@@ -43,9 +46,13 @@ const props = defineProps<{
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import UpdateCheckBadge from './UpdateCheckBadge.vue';
 import containerStatusColor from '@/services/ContainerStatusColor';
 
 export default defineComponent({
+  components: {
+    UpdateCheckBadge,
+},
   data() {
     return {
       navigatingAway: false

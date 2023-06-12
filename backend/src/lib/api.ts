@@ -131,6 +131,17 @@ export namespace endpoints {
         }
     }
 
+    export namespace updates {
+        export const url = '/api/updates';
+        export type query = {
+            image_name: string;
+            current_hash: string;
+        };
+        export type resp_type = {
+            state: 'up-to-date'|'outdated'|'error'
+        };
+    }
+
     export namespace config {
         export const url = '/api/config';
         export interface type {

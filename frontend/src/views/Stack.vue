@@ -72,11 +72,14 @@
     </td>
     <td>
         <template v-if="i.existing_image">
-            <a v-if="i.existing_image.url" :href="i.existing_image.url" :title="i.existing_image.hash" target="_blank">{{ i.existing_image.name }}</a>
-            <p v-else>
+            <template v-if="i.existing_image.url">
+                <a :href="i.existing_image.url" :title="i.existing_image.hash" target="_blank">{{ i.existing_image.name }}</a>
+                <UpdateCheckBadge :image_name="i.existing_image.name" :current_hash="i.existing_image.hash"></UpdateCheckBadge>
+            </template>
+            <template v-else>
                 <span :title="i.existing_image.hash">{{ i.existing_image.name }}</span> <strong>(custom)</strong><br/>
                 <strong>from</strong> <a :href="i.existing_image.base_url!" target="_blank">{{ i.existing_image.base }}</a>
-            </p>
+            </template>
         </template>
         <template v-else-if="i.dockerfile_image?.name">
             <a :href="i.dockerfile_image?.url" target="_blank">{{ i.dockerfile_image?.name }}</a>
@@ -159,9 +162,12 @@ import { defineComponent } from 'vue';
 import { AxiosError } from "axios";
 import { endpoints } from '@api';
 import { Modal } from 'bootstrap';
+
 import MessageModal from '@/components/MessageModal.vue';
 import DockerComposeFile from './Stack/DockerComposeFile.vue';
 import StackSnapshotClone from './Stack/StackSnapshotClone.vue';
+import UpdateCheckBadge from '@/components/UpdateCheckBadge.vue';
+
 import ApiClient from '@/services/ApiClient';
 import containerStatusColor from '@/services/ContainerStatusColor';
 
@@ -169,7 +175,8 @@ export default defineComponent({
     components: {
         MessageModal,
         DockerComposeFile,
-        StackSnapshotClone
+        StackSnapshotClone,
+        UpdateCheckBadge
     },
     data() {
         return {
