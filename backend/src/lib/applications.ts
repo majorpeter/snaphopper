@@ -98,22 +98,24 @@ export class Applications {
         return result;
     }
 
-    async composeUp(name: string): Promise<string|null> {
+    async composeUp(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
         if (this.path && this.exec && await this.projectExists(name)) {
-            return await this.exec('docker-compose', ['--no-ansi', 'up', '-d'], {
+            await this.exec('docker-compose', ['--no-ansi', 'up', '-d'], {
                 working_dir: this.path + '/' + name,
+                onStdout: onStdout,
+                onStderr: onStdout
             });
         }
-        return null;
     }
 
-    async composeDown(name: string): Promise<string|null> {
+    async composeDown(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
         if (this.path && this.exec && await this.projectExists(name)) {
-            return await this.exec('docker-compose', ['--no-ansi', 'down'], {
+            await this.exec('docker-compose', ['--no-ansi', 'down'], {
                 working_dir: this.path + '/' + name,
+                onStdout: onStdout,
+                onStderr: onStdout
             });
         }
-        return null;
     }
 
     //TODO stop watching when finished

@@ -238,12 +238,19 @@ export default defineComponent({
                 return;
             }
 
+            const messageModal = <typeof MessageModal> this.$refs.message;
             this.dockerComposeExecuting = true;
+            messageModal.showConsole('Compose up');
+            messageModal.showSpinner = true;
             try {
-                const resp = (await ApiClient().post(endpoints.stack.docker_compose.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose.post_req_type> {
+                await ApiClient().post(endpoints.stack.docker_compose.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose.post_req_type> {
                     command: 'up'
-                })).data;
-                (<typeof MessageModal> this.$refs.message).showHtml('docker-compose up -d', resp.replace(/\n/g, '<br/>'));
+                }, {
+                    onDownloadProgress(progressEvent) {
+                        messageModal.consoleOutput = progressEvent.event.currentTarget.response;
+                    }
+                });
+                messageModal.showSpinner = false;
                 this.reloadData();
             } catch (e) {
                 (<typeof MessageModal> this.$refs.message).show('"docker-compose up -d" failed', 'Command failed');
@@ -255,12 +262,19 @@ export default defineComponent({
                 return;
             }
 
+            const messageModal = <typeof MessageModal> this.$refs.message;
             this.dockerComposeExecuting = true;
+            messageModal.showConsole('Compose down');
+            messageModal.showSpinner = true;
             try {
-                const resp = (await ApiClient().post(endpoints.stack.docker_compose.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose.post_req_type> {
+                await ApiClient().post(endpoints.stack.docker_compose.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose.post_req_type> {
                     command: 'down'
-                })).data;
-                (<typeof MessageModal> this.$refs.message).showHtml('docker-compose down', resp.replace(/\n/g, '<br/>'));
+                }, {
+                    onDownloadProgress(progressEvent) {
+                        messageModal.consoleOutput = progressEvent.event.currentTarget.response;
+                    }
+                });
+                messageModal.showSpinner = false;
                 this.reloadData();
             } catch (e) {
                 (<typeof MessageModal> this.$refs.message).show('"docker-compose down" failed', 'Command failed');
@@ -273,7 +287,8 @@ export default defineComponent({
             ApiClient().get(endpoints.stack.docker_compose.logs.url.replace(':name', <string> this.name), {
                 onDownloadProgress(progressEvent) {
                     messageModal.consoleOutput = progressEvent.event.currentTarget.response;
-                }});
+                }
+            });
         },
         showSnapshotCreateDialog() {
             // TODO get suggestion from backend

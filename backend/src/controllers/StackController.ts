@@ -161,11 +161,25 @@ export default function(app: Express, docker: Docker, applications: Applications
 
     app.post<endpoints.stack.docker_compose.params, endpoints.stack.docker_compose.post_resp_type, endpoints.stack.docker_compose.post_req_type, {}>(endpoints.stack.docker_compose.url, authenticationRequred,async (req, res) => {
         if (req.body.command == 'up') {
-            const result = await applications.composeUp(req.params.name);
-            res.send(result ? result : 'docker-compose call failed');
+            res.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Content-Encoding': 'none'
+            });
+            await applications.composeUp(req.params.name, (chunk: Buffer) => {
+                res.write(chunk);
+            });
+            res.end();
         } else if (req.body.command == 'down') {
-            const result = await applications.composeDown(req.params.name);
-            res.send(result ? result : 'docker-compose call failed');
+            res.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Content-Encoding': 'none'
+            });
+            await applications.composeDown(req.params.name, (chunk: Buffer) => {
+                res.write(chunk);
+            });
+            res.end();
         } else {
             res.sendStatus(400);
         }
@@ -196,9 +210,9 @@ export default function(app: Express, docker: Docker, applications: Applications
     app.get<endpoints.stack.docker_compose.logs.params>(endpoints.stack.docker_compose.logs.url, (req, res) => {
         if (docker.available) {
             res.writeHead(200, {
-                "Content-Type": "text/event-stream",
-                "Cache-Control": "no-cache",
-                "Content-Encoding": "none"
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Content-Encoding': 'none'
             });
 
             applications.composeLogs(req.params.name, (chunk: Buffer) => {
