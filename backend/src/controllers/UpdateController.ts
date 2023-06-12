@@ -1,6 +1,7 @@
 import { Express } from "express";
 import { endpoints } from "../lib/api";
 import { DockerHub } from "../lib/dockerhub";
+import { AxiosError } from "axios";
 
 class UpdateChecker {
     private cache: {[image_name: string]: {
@@ -31,7 +32,9 @@ class UpdateChecker {
                 return true;
             }
         } catch (e) {
-            //TODO
+            if ((<AxiosError> e).response?.status == 429) {
+                console.log('Ratelimit exceeded');
+            }
         }
         return false;
     }
