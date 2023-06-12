@@ -22,7 +22,8 @@ export namespace endpoints {
                         service_name: string;
                         container_name?: string;
                         image_name?: string;
-                        image_hash?: string;
+                        image_id?: string;
+                        image_digest?: string;
                         custom_build: boolean;
                         status: DockerContainerStatus;
                     }[];
@@ -43,11 +44,13 @@ export namespace endpoints {
                 dockerfile_image?: {
                     name?: string;
                     url?: string;
-                    hash?: string;
+                    id?: string;
+                    digest?: string;
                 }
                 existing_image?: {
                     name: string;
-                    hash?: string;
+                    id: string;
+                    digest: string;
                     url?: string;
                     base?: string;
                     base_url?: string;
@@ -168,10 +171,12 @@ export namespace endpoints {
         export const url = '/api/updates';
         export type query = {
             image_name: string;
-            current_hash: string;
+            id: string;
+            digest: string;
         };
         export type resp_type = {
             state: 'up-to-date'|'outdated'|'error'
+            latest_hash?: string
         };
     }
 

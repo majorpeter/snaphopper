@@ -22,11 +22,11 @@ const props = defineProps<{
                 <template v-if="item.container_name">{{ item.container_name }}</template>
                 <span v-else class="text-muted">N/A</span>
               </td>
-              <td class="col-sm-4" :title="item.image_hash">
+              <td class="col-sm-4" :title="item.image_id">
                 <em v-if="item.custom_build">custom build</em>
                 <template v-else="item.image_name">
                   {{ item.image_name }}
-                  <UpdateCheckBadge :image_name="item.image_name" :current_hash="item.image_hash" v-if="item.image_hash"></UpdateCheckBadge>
+                  <UpdateCheckBadge :image_name="item.image_name" :id="item.image_id" :digest="item.image_digest" v-if="item.image_id"></UpdateCheckBadge>
                 </template>
               </td>
               <td class="col-sm-1" :class="containerStatusColor(item.status)">{{ item.status }}</td>

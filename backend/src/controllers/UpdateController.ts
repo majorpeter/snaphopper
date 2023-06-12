@@ -20,7 +20,7 @@ class UpdateChecker {
             if (manifest.dockerManifest) {
                 remote_hash = manifest.dockerManifest.config.digest;
             } else if (manifest.ociImageIndex) {
-                remote_hash = UpdateChecker.getHashForPlatform(manifest.ociImageIndex);
+                remote_hash = manifest.dockerContentDigest;
             }
 
             if (remote_hash) {
@@ -68,27 +68,22 @@ class UpdateChecker {
         return this.referenceCache[reference];
     }
 
-    async isUpdateAvailable(image_name_with_tag: string, current_hash: string): Promise<'outdated'|'up-to-date'|'error'> {
-        if (current_hash.indexOf('@') != -1) {
-            const actualHash = await this.getHashForReference(current_hash);
-            if (!actualHash) {
-                return 'error';
-            }
-            current_hash = actualHash;
-        }
-
+    async isUpdateAvailable(image_name_with_tag: string, id: string, digest: string): Promise<endpoints.updates.resp_type> {
         const image_name = image_name_with_tag.split(':')[0];
         if (!this.isCached(image_name)) {
             if (!await this.fetchLatestHashForImage(image_name)) {
-                return 'error'
+                return {state: 'error'};
             }
         }
 
-        if (this.cache[image_name].latest_hash != current_hash) {
-            return 'outdated';
+        if ((this.cache[image_name].latest_hash != id) && (this.cache[image_name].latest_hash != digest)) {
+            return {
+                state: 'outdated',
+                latest_hash: this.cache[image_name].latest_hash
+            };
         }
 
-        return 'up-to-date';
+        return {state:'up-to-date'};
     }
 }
 
@@ -96,8 +91,6 @@ export default function (app: Express) {
     const checker: UpdateChecker = new UpdateChecker();
 
     app.get<{}, endpoints.updates.resp_type, {}, endpoints.updates.query>(endpoints.updates.url, async (req, res) => {
-        res.send({
-            state: await checker.isUpdateAvailable(req.query.image_name, req.query.current_hash)
-        });
+        res.send(await checker.isUpdateAvailable(req.query.image_name, req.query.id, req.query.digest));
     });
 };

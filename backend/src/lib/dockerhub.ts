@@ -19,7 +19,8 @@ export namespace DockerHub {
                     os: string;
                 };
             }[];
-        }
+        },
+        dockerContentDigest?: string;
     };
 
     /**
@@ -67,9 +68,15 @@ export namespace DockerHub {
 
         const contentType = (<AxiosResponseHeaders> manifestResp.headers).getContentType()?.toString();
         if (contentType == supportedContentTypes.dockerManifest) {
-            return {dockerManifest: manifestResp.data};
+            return {
+                dockerContentDigest: (<AxiosResponseHeaders> manifestResp.headers).get('docker-content-digest')?.toString(),
+                dockerManifest: manifestResp.data
+            };
         } else if (contentType == supportedContentTypes.ociImageIndex) {
-            return {ociImageIndex: manifestResp.data};
+            return {
+                dockerContentDigest: (<AxiosResponseHeaders> manifestResp.headers).get('docker-content-digest')?.toString(),
+                ociImageIndex: manifestResp.data
+            };
         }
         return {};
     }

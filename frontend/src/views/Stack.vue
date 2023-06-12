@@ -75,11 +75,11 @@
     <td>
         <template v-if="i.existing_image">
             <template v-if="i.existing_image.url">
-                <a :href="i.existing_image.url" :title="i.existing_image.hash" target="_blank">{{ i.existing_image.name }}</a>
-                <UpdateCheckBadge :image_name="i.existing_image.name" :current_hash="i.existing_image.hash"></UpdateCheckBadge>
+                <a :href="i.existing_image.url" :title="i.existing_image.id" target="_blank">{{ i.existing_image.name }}</a>
+                <UpdateCheckBadge :image_name="i.existing_image.name" :id="i.existing_image.id" :digest="i.existing_image.digest"></UpdateCheckBadge>
             </template>
             <template v-else>
-                <span :title="i.existing_image.hash">{{ i.existing_image.name }}</span> <strong>(custom)</strong><br/>
+                <span :title="i.existing_image.id">{{ i.existing_image.name }}</span> <strong>(custom)</strong><br/>
                 <strong>from</strong> <a :href="i.existing_image.base_url!" target="_blank">{{ i.existing_image.base }}</a>
             </template>
 
@@ -88,8 +88,8 @@
             </span>
         </template>
         <template v-else-if="i.dockerfile_image?.name">
-            <a :href="i.dockerfile_image.url" target="_blank">{{ i.dockerfile_image?.name }}</a>
-            <UpdateCheckBadge v-if="i.dockerfile_image.hash" :image_name="i.dockerfile_image.name" :current_hash="i.dockerfile_image.hash"></UpdateCheckBadge>
+            <a :href="i.dockerfile_image.url" target="_blank" :title="i.dockerfile_image.id">{{ i.dockerfile_image?.name }}</a>
+            <UpdateCheckBadge v-if="i.dockerfile_image.id" :image_name="i.dockerfile_image.name" :id="i.dockerfile_image.id" :digest="i.dockerfile_image.digest"></UpdateCheckBadge>
             <span v-else class="badge bg-info ms-2">Not available</span>
         </template>
         <span v-else>custom</span>

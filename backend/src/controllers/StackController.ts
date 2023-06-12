@@ -37,10 +37,14 @@ export default function(app: Express, docker: Docker, applications: Applications
                             };
 
                             if (running_service_container) {
-                                service_record.image_name = running_service_container.Config.Image;
-                                service_record.image_hash = running_service_container.Image;
-
                                 const image = (await docker.inspectImages([running_service_container.Image]))[0];
+
+                                service_record.image_name = running_service_container.Config.Image;
+                                if (image.RepoDigests.length > 0) {
+                                    service_record.image_id = image.Id;
+                                    service_record.image_digest = image.RepoDigests[0].split('@')[1];
+                                }
+
                                 service_record.custom_build = Docker.isCustomImage(image);
                             } else {
                                 service_record.image_name = service_config.image;
@@ -86,7 +90,8 @@ export default function(app: Express, docker: Docker, applications: Applications
                                 dockerfile_image: {
                                     name: image_name,
                                     url: image_name ? DockerHub.getUrl(image_name.split(':')[0]) : undefined,
-                                    hash: image_data.length ? image_data[0].RepoDigests[0] : undefined
+                                    id: image_data.length ? image_data[0].Id : undefined,
+                                    digest: image_data.length ? image_data[0].RepoDigests[0].split('@')[1] : undefined
                                 },
                                 status: 'N/A'
                             };
@@ -130,7 +135,8 @@ export default function(app: Express, docker: Docker, applications: Applications
 
                     service.existing_image = {
                         name: value.Config.Image,
-                        hash: value.Image,
+                        id: image.Id,
+                        digest: image.RepoDigests[0].split('@')[1],
                         url: custom ? undefined : DockerHub.getUrl(value.Config.Image.split(':')[0]),
                         base: base,
                         base_url: base ? DockerHub.getUrl(base!.split(':')[0]) : undefined

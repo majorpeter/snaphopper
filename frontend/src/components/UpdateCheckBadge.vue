@@ -1,7 +1,7 @@
 <template>
-<span class="badge bg-primary ms-2" @click="" v-if="status=='outdated'" title="An update is available for this service.">Update</span>
-<span class="badge bg-warning ms-2" @click="" v-if="status=='error'">Error</span>
-<span class="spinner-border spinner-border-sm text-primary ms-2" role="status" aria-hidden="true" v-else-if="status=='unknown'"></span>
+<span class="badge bg-primary ms-2" @click="" v-if="data?.state=='outdated'" :title="data.latest_hash">Update</span>
+<span class="badge bg-warning ms-2" @click="" v-if="data?.state=='error'">Error</span>
+<span class="spinner-border spinner-border-sm text-primary ms-2" role="status" aria-hidden="true" v-else-if="!data"></span>
 </template>
 
 <script lang="ts">
@@ -12,11 +12,12 @@ import { defineComponent } from 'vue';
 export default defineComponent({
     props: {
         image_name: String,
-        current_hash: String
+        id: String,
+        digest: String
     },
     data() {
         return {
-            status: <endpoints.updates.resp_type['state'] | 'unknown'> 'unknown'
+            data: <endpoints.updates.resp_type | undefined> undefined
         }
     },
     mounted() {
@@ -24,17 +25,18 @@ export default defineComponent({
     },
     methods: {
         async checkUpdate() {
-            this.status = (<endpoints.updates.resp_type> (await ApiClient().get(endpoints.updates.url, {
+            this.data = (<endpoints.updates.resp_type> (await ApiClient().get(endpoints.updates.url, {
             params: <endpoints.updates.query> {
                 image_name: this.image_name,
-                current_hash: this.current_hash
+                id: this.id,
+                digest: this.digest
             }
-        })).data).state;
+        })).data);
         }
     },
     watch: {
         // fetch again if docker-compose file was edited
-        current_hash(_newVal, _oldVal) {
+        id(_newVal, _oldVal) {
             this.checkUpdate();
         }
     }
