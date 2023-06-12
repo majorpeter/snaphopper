@@ -91,7 +91,7 @@ export default function(app: Express, docker: Docker, applications: Applications
                                     name: image_name,
                                     url: image_name ? DockerHub.getUrl(image_name.split(':')[0]) : undefined,
                                     id: image_data.length ? image_data[0].Id : undefined,
-                                    digest: image_data.length ? image_data[0].RepoDigests[0].split('@')[1] : undefined
+                                    digest: image_data.length && image_data[0].RepoDigests.length ? image_data[0].RepoDigests[0].split('@')[1] : undefined
                                 },
                                 status: 'N/A'
                             };
@@ -136,7 +136,7 @@ export default function(app: Express, docker: Docker, applications: Applications
                     service.existing_image = {
                         name: value.Config.Image,
                         id: image.Id,
-                        digest: image.RepoDigests[0].split('@')[1],
+                        digest: image.RepoDigests.length ? image.RepoDigests[0].split('@')[1] : undefined,
                         url: custom ? undefined : DockerHub.getUrl(value.Config.Image.split(':')[0]),
                         base: base,
                         base_url: base ? DockerHub.getUrl(base!.split(':')[0]) : undefined

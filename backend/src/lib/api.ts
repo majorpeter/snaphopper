@@ -50,7 +50,7 @@ export namespace endpoints {
                 existing_image?: {
                     name: string;
                     id: string;
-                    digest: string;
+                    digest?: string;
                     url?: string;
                     base?: string;
                     base_url?: string;
