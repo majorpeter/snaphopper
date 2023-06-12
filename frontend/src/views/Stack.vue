@@ -80,6 +80,10 @@
                 <span :title="i.existing_image.hash">{{ i.existing_image.name }}</span> <strong>(custom)</strong><br/>
                 <strong>from</strong> <a :href="i.existing_image.base_url!" target="_blank">{{ i.existing_image.base }}</a>
             </template>
+
+            <span class="badge bg-info ms-2" v-if="i.dockerfile_image && i.dockerfile_image.name != i.existing_image.name" title="Docker compose file changed since this container was created.">
+            Config changed
+            </span>
         </template>
         <template v-else-if="i.dockerfile_image?.name">
             <a :href="i.dockerfile_image.url" target="_blank">{{ i.dockerfile_image?.name }}</a>
@@ -317,3 +321,9 @@ export default defineComponent({
     }
 });
 </script>
+
+<style scoped>
+span.badge {
+    cursor: default;
+}
+</style>

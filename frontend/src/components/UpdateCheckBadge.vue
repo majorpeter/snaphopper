@@ -1,5 +1,5 @@
 <template>
-<span class="badge bg-primary ms-2" @click="" v-if="status=='outdated'">Update</span>
+<span class="badge bg-primary ms-2" @click="" v-if="status=='outdated'" title="An update is available for this service.">Update</span>
 <span class="badge bg-warning ms-2" @click="" v-if="status=='error'">Error</span>
 <span class="spinner-border spinner-border-sm text-primary ms-2" role="status" aria-hidden="true" v-else-if="status=='unknown'"></span>
 </template>
