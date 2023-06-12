@@ -6,7 +6,7 @@
         </router-link>
         <ul class="nav nav-pills" v-if="$store.state.isLoggedIn">
             <li class="nav-item">
-                <router-link :to="{name: 'home'}" class="nav-link">Stacks</router-link>
+                <router-link :to="{name: 'home'}" :class="stacksLinkClass" class="nav-link">Stacks</router-link>
             </li>
             <li class="nav-item">
                 <router-link :to="{name: 'config'}" class="nav-link">Config</router-link>
@@ -22,6 +22,7 @@
 import paths from '@/router/paths';
 import { MutationTypes } from '@/store';
 import { defineComponent } from 'vue';
+import { stacksPathName } from '@/router';
 
 export default defineComponent({
     methods: {
@@ -29,6 +30,11 @@ export default defineComponent({
             //TODO invalidate token
             this.$store.commit(MutationTypes.logout, undefined);
             this.$router.push(paths.login);
+        }
+    },
+    computed: {
+        stacksLinkClass() {
+            return this.$route.name == stacksPathName ? 'active' : '';
         }
     }
 });

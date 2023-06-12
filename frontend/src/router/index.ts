@@ -12,11 +12,13 @@ const redirectUnauthenticatedToLogin = () => {
     }
 };
 
+export const stacksPathName = 'stack';
+
 const routes: RouteRecordRaw[] = [
     //TODO eliminate names?
     {path: paths.home, name: 'home', component: StackList, beforeEnter: redirectUnauthenticatedToLogin},
     {path: paths.login, name: 'login', component: Login},
-    {path: paths.stack_by_name, name: 'stack', component: Stack, beforeEnter: redirectUnauthenticatedToLogin},
+    {path: paths.stack_by_name, name: stacksPathName, component: Stack, beforeEnter: redirectUnauthenticatedToLogin},
     {path: paths.config, name: 'config', component: Config, beforeEnter: redirectUnauthenticatedToLogin}
 ];
 
