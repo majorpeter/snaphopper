@@ -231,13 +231,11 @@ export default defineComponent({
             this.data = _data;
             this.updateSnapshots();
         },
-        updateSnapshots() {
+        async updateSnapshots() {
             if (this.data.zfs_dataset) {
-                ApiClient().get(endpoints.snapshot.list.url, {params: <endpoints.snapshot.list.query_type> {
+                this.zfs_snapshots = (await ApiClient().get(endpoints.snapshot.list.url, {params: <endpoints.snapshot.list.query_type> {
                     dataset: this.data.zfs_dataset?.name
-                }}).then((value) => {
-                    this.zfs_snapshots = value.data;
-                });
+                }})).data;
             }
         },
         async reloadData() {
@@ -324,7 +322,7 @@ export default defineComponent({
                     name: name
                 });
 
-                this.updateSnapshots();
+                await this.updateSnapshots();
             } else {
                 throw Error('Dataset not available');
             }
@@ -332,7 +330,7 @@ export default defineComponent({
         async createSnapshotBtnClicked() {
             this.createSnapshotModal.state = 'creating';
             try {
-                this.createSnapshot(this.createSnapshotModal.model.name);
+                await this.createSnapshot(this.createSnapshotModal.model.name);
                 this.createSnapshotModal.state = 'idle';
                 this.createSnapshotModal.modal.hide();
             } catch (e) {
@@ -366,7 +364,7 @@ export default defineComponent({
                         dataset_path: this.data.zfs_dataset!.name,
                         snapshot_name: snapshot
                     });
-                    this.updateSnapshots();
+                    await this.updateSnapshots();
                 });
         },
         containerStatusColor: containerStatusColor
