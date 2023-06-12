@@ -16,6 +16,10 @@
                 <textarea class="form-control" id="composeFileYaml" v-model="content"></textarea>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-primary" @click="snapshotSaveApply" :disabled="content==saved_content || state=='saving'">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="state=='saving'"></span>
+                    Snapshot, Save & Apply
+                </button>
                 <button type="button" class="btn btn-primary" @click="save" :disabled="content==saved_content || state=='saving'">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="state=='saving'"></span>
                     Save
@@ -28,16 +32,20 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { PropType, defineComponent } from 'vue';
 import { Modal } from 'bootstrap';
 import { endpoints } from '@api';
 import ApiClient from '@/services/ApiClient';
+
+import { generateSnapshotName } from '../Stack.vue'
 
 export default defineComponent({
     props: {
         name: String,
         filepath: String,
-        canClose: Boolean
+        canClose: Boolean,
+        createSnapshot: Function as PropType<(name: string) => Promise<void>>,
+        composeUp: Function as PropType<() => Promise<void>>
     },
     emits: {
         'compose-file-changed': null
@@ -70,6 +78,14 @@ export default defineComponent({
                 this.$emit('compose-file-changed');
             } catch (e) {
                 this.state = 'save_error';
+            }
+        },
+        async snapshotSaveApply() {
+            await this.createSnapshot!(generateSnapshotName('compose'));
+            await this.save();
+
+            if (this.state != 'save_error') {
+                this.composeUp!();
             }
         }
     }

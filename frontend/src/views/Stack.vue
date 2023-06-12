@@ -129,29 +129,29 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Create new Snapshot</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" :disabled="createSnapshot.state=='creating'"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" :disabled="createSnapshotModal.state=='creating'"></button>
       </div>
       <div class="modal-body">
-        <div class="alert alert-danger fade show" role="alert" v-if="createSnapshot.state=='error'">
+        <div class="alert alert-danger fade show" role="alert" v-if="createSnapshotModal.state=='error'">
             Failed to create snapshot:
-            <ul><li>{{ createSnapshot.error_message }}</li></ul>
+            <ul><li>{{ createSnapshotModal.error_message }}</li></ul>
         </div>
 
         <form>
           <div class="mb-3">
             <label for="snapshotCreateModalDataset" class="col-form-label">Dataset:</label>
-            <input type="text" class="form-control" id="snapshotCreateModalDataset" readonly v-model="createSnapshot.model.dataset"/>
+            <input type="text" class="form-control" id="snapshotCreateModalDataset" readonly v-model="createSnapshotModal.model.dataset"/>
           </div>
           <div class="mb-3">
             <label for="snapshotCreateModalName" class="col-form-label">Snapshot name:</label>
-            <input class="form-control" id="snapshotCreateModalName" v-model="createSnapshot.model.name" :readonly="createSnapshot.state=='creating'"/>
+            <input class="form-control" id="snapshotCreateModalName" v-model="createSnapshotModal.model.name" :readonly="createSnapshotModal.state=='creating'"/>
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" :disabled="createSnapshot.state=='creating'">Close</button>
-        <button type="button" class="btn btn-primary" @click="createSnapshotBtnClicked" :disabled="createSnapshot.state=='creating'">
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="createSnapshot.state=='creating'"></span>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" :disabled="createSnapshotModal.state=='creating'">Close</button>
+        <button type="button" class="btn btn-primary" @click="createSnapshotBtnClicked" :disabled="createSnapshotModal.state=='creating'">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="createSnapshotModal.state=='creating'"></span>
             Create
         </button>
       </div>
@@ -159,9 +159,14 @@
   </div>
 </div>
 
-<MessageModal ref="message"></MessageModal>
-<DockerComposeFile ref="composeFile" :name="<string> name" :filepath="data.working_directory + '/' + data.compose_config_file_name" :can-close="!dataReloading" @compose-file-changed="reloadData"></DockerComposeFile>
+<DockerComposeFile ref="composeFile" :name="<string> name"
+    :filepath="data.working_directory + '/' + data.compose_config_file_name"
+    :can-close="!dataReloading"
+    :create-snapshot="createSnapshot"
+    :compose-up="dockerComposeUp"
+    @compose-file-changed="reloadData"></DockerComposeFile>
 <StackSnapshotClone ref="stackSnapshotClone" :dataset-name="data.zfs_dataset?.name"></StackSnapshotClone>
+<MessageModal ref="message"></MessageModal>
 
 </template>
 
@@ -179,6 +184,15 @@ import UpdateCheckBadge from '@/components/UpdateCheckBadge.vue';
 import ApiClient from '@/services/ApiClient';
 import containerStatusColor from '@/services/ContainerStatusColor';
 
+export function generateSnapshotName(prefix: string): string {
+    // TODO get suggestion from backend?
+    const now = new Date();
+    const isoStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString();
+    const date = isoStr.split('T')[0];
+    const time = isoStr.split('T')[1].split(':');
+    return `${prefix}-${date}_${time[0]}-${time[1]}`;
+}
+
 export default defineComponent({
     components: {
         MessageModal,
@@ -193,7 +207,7 @@ export default defineComponent({
             dataReloading: false,
             zfs_snapshots: <endpoints.snapshot.list.resp_type> [],
             dockerComposeExecuting: false,
-            createSnapshot: {
+            createSnapshotModal: {
                 modal: <Modal> {},
                 model: {
                     dataset: '',
@@ -205,7 +219,7 @@ export default defineComponent({
         }
     },
     mounted() {
-        this.createSnapshot.modal = new Modal(<Element> document.getElementById('snapshotCreateModal'), {
+        this.createSnapshotModal.modal = new Modal(<Element> document.getElementById('snapshotCreateModal'), {
             backdrop: 'static',
             keyboard: false
         });
@@ -291,37 +305,38 @@ export default defineComponent({
             });
         },
         showSnapshotCreateDialog() {
-            // TODO get suggestion from backend
-            const now = new Date();
-            const isoStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString();
-            const date = isoStr.split('T')[0];
-            const time = isoStr.split('T')[1].split(':');
-
-            this.createSnapshot.model = {
+            this.createSnapshotModal.model = {
                 dataset: this.data.zfs_dataset!.name,
-                name: `manual-${date}_${time[0]}-${time[1]}`
+                name: generateSnapshotName('manual')
             }
 
-            this.createSnapshot.modal.show();
+            this.createSnapshotModal.modal.show();
         },
         async showComposeFileClicked() {
             (<typeof DockerComposeFile> this.$refs.composeFile).showComposeFile();
         },
-        async createSnapshotBtnClicked() {
-            this.createSnapshot.state = 'creating';
-            try {
+        async createSnapshot(name: string) {
+            if (this.data.zfs_dataset) {
                 await ApiClient().post(endpoints.snapshot.create.url, <endpoints.snapshot.create.req_type> {
-                    dataset: this.createSnapshot.model.dataset,
-                    name: this.createSnapshot.model.name
+                    dataset: this.data.zfs_dataset.name,
+                    name: name
                 });
-                this.createSnapshot.state = 'idle';
-                this.createSnapshot.modal.hide();
 
                 this.updateSnapshots();
+            } else {
+                throw Error('Dataset not available');
+            }
+        },
+        async createSnapshotBtnClicked() {
+            this.createSnapshotModal.state = 'creating';
+            try {
+                this.createSnapshot(this.createSnapshotModal.model.name);
+                this.createSnapshotModal.state = 'idle';
+                this.createSnapshotModal.modal.hide();
             } catch (e) {
                 const resp = <endpoints.snapshot.create.error_resp_type> (<AxiosError> e).response?.data;
-                this.createSnapshot.error_message = resp.message;
-                this.createSnapshot.state = 'error';
+                this.createSnapshotModal.error_message = resp.message;
+                this.createSnapshotModal.state = 'error';
             }
         },
         cloneSnapshotClicked(snapshot: string) {
