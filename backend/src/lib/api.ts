@@ -149,6 +149,19 @@ export namespace endpoints {
                 message: string;
             }
         }
+
+        export namespace remove {
+            export const url = '/api/snapshot/remove';
+
+            export interface req_type {
+                dataset_path: string;
+                snapshot_name: string;
+            }
+
+            export interface error_resp_type {
+                message: string;
+            }
+        }
     }
 
     export namespace updates {

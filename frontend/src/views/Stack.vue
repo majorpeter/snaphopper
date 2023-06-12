@@ -118,6 +118,7 @@
 
             <button @click="cloneSnapshotClicked(snapshot.name)" class="btn btn-primary me-1">Clone</button>
             <button @click="rollbackSnapshotClicked(snapshot.name)" class="btn btn-primary me-1">Rollback</button>
+            <button @click="removeSnapshotClicked(snapshot.name)" class="btn btn-danger me-1">Remove</button>
         </div>
     </div>
     </div>
@@ -354,6 +355,18 @@ export default defineComponent({
                         snapshot_name: snapshot
                     });
                     await this.dockerComposeUp();
+                });
+        },
+        removeSnapshotClicked(snapshot: string) {
+            const messageModal = <typeof MessageModal> this.$refs.message;
+            messageModal.showYesNo('Confirm',
+                `Remove snapshot "${snapshot}"?`,
+                async () => {
+                    await ApiClient().post<any, any, endpoints.snapshot.remove.req_type>(endpoints.snapshot.remove.url, {
+                        dataset_path: this.data.zfs_dataset!.name,
+                        snapshot_name: snapshot
+                    });
+                    this.updateSnapshots();
                 });
         },
         containerStatusColor: containerStatusColor

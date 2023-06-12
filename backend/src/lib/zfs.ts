@@ -84,6 +84,10 @@ export class Zfs {
         await this.exec!('sudo', ['zfs', 'rollback', dataset + '@' + snapshotName]);
     }
 
+    async removeSnapshot(dataset: string, snapshotName: string) {
+        await this.exec!('sudo', ['zfs', 'destroy', dataset + '@' + snapshotName]);
+    }
+
     /**
      * @see https://docs.oracle.com/cd/E19253-01/819-5461/gbcpt/index.html
      */
