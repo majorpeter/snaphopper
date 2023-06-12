@@ -56,9 +56,13 @@ class UpdateChecker {
 
     private async getHashForReference(reference: string): Promise<string|null> {
         if (!Object.keys(this.referenceCache).includes(reference)) {
-            const manifest = await DockerHub.getManifestByReference(reference);
-            if (manifest.ociImageIndex) {
-                this.referenceCache[reference] = UpdateChecker.getHashForPlatform(manifest.ociImageIndex);
+            try {
+                const manifest = await DockerHub.getManifestByReference(reference);
+                if (manifest.ociImageIndex) {
+                    this.referenceCache[reference] = UpdateChecker.getHashForPlatform(manifest.ociImageIndex);
+                }
+            } catch (e) {
+                return null;
             }
         }
         return this.referenceCache[reference];
