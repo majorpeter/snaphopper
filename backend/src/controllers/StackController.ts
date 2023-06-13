@@ -1,12 +1,14 @@
 import { Express } from 'express';
-import { authenticationRequred } from '../lib/policies';
+import { authenticationRequred, isWsTokenValid } from '../lib/policies';
 import { endpoints } from '../lib/api';
 import { ContainerInfo, Docker, ImageInfo } from '../lib/docker';
 import { Zfs } from '../lib/zfs';
 import { DockerHub } from '../lib/dockerhub';
 import { Applications, DockerComposeYaml } from '../lib/applications';
+import ws from 'ws';
+import http from 'http';
 
-export default function(app: Express, docker: Docker, applications: Applications, zfs: Zfs) {
+export default function(app: Express, server: http.Server, docker: Docker, applications: Applications, zfs: Zfs) {
     async function extractServiceData(project_name: string, project: DockerComposeYaml, stack: ContainerInfo[]|null) {
         let result: {[name: string]: endpoints.ServiceData} = {};
 
@@ -218,20 +220,26 @@ export default function(app: Express, docker: Docker, applications: Applications
         }
     });
 
-    app.get<endpoints.stack.docker_compose.logs.params>(endpoints.stack.docker_compose.logs.url, (req, res) => {
+    const logServer = new ws.Server({server: server, path: endpoints.stack.docker_compose.logs.url});
+    logServer.on('connection', (socket, _request) => {
         if (docker.available) {
-            res.writeHead(200, {
-                'Content-Type': 'text/event-stream',
-                'Cache-Control': 'no-cache',
-                'Content-Encoding': 'none'
-            });
+            socket.onmessage = (event: ws.MessageEvent) => {
+                socket.onmessage = null;
 
-            applications.composeLogs(req.params.name, (chunk: Buffer) => {
-                res.write(chunk);
-            }).then(() => {
-            });
-        } else {
-            res.sendStatus(500);
+                const initMessage = <endpoints.stack.docker_compose.logs.param> JSON.parse(<string> event.data);
+                if (isWsTokenValid(initMessage.token)) {
+                    applications.composeLogsStream(initMessage.stack_name, (chunk) => {
+                        socket.send(chunk.toString());
+                    }).then(closeCallback => {
+                        socket.on('close', (_code, _reason) => {
+                            closeCallback();
+                        });
+                    });
+                } else {
+                    socket.send('Token invalid!');
+                    socket.close();
+                }
+            }
         }
     });
 

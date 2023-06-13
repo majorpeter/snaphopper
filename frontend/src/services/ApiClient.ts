@@ -1,6 +1,12 @@
 import { MutationTypes, store } from "@/store"
 import axios from "axios"
 
+export function WebSocketClient(path: string): WebSocket & {token: Readonly<string>} {
+    const c = <WebSocket & {token: string}> new WebSocket((location.protocol == 'https' ? 'wss://' : 'ws://') + location.host + path);
+    c.token = store.state.token;        // this token can be used for authentication in the first message
+    return c;
+}
+
 export default () => {
     const instance = axios.create({
         headers: {

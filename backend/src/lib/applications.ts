@@ -8,6 +8,11 @@ export type exec = (command: string, args: string[], options?: {
     onStderr?: (chunk: Buffer) => void
 }) => Promise<string>;
 
+// returns a callback to close shell
+export type shell = (
+    command_line: string,
+    onStdout: (chunk: Buffer) => void) => Promise<() => void>;
+
 export interface DockerComposeYaml {
     version: string;
     services: {[key: string]: {
@@ -20,14 +25,16 @@ export interface DockerComposeYaml {
 
 export class Applications {
     private exec: exec|undefined;
+    private shell: shell|undefined;
     private path: string|undefined;
 
     setPath(path?: string) {
         this.path = path;
     }
 
-    setAdapter(exec: exec|undefined) {
+    setAdapter(exec: exec|undefined, shell: shell|undefined) {
         this.exec = exec;
+        this.shell = shell;
     }
 
     async getProjectFolders(): Promise<string[]> {
@@ -150,13 +157,10 @@ export class Applications {
         }
     }
 
-    //TODO stop watching when finished
-    async composeLogs(name: string, onStdout: (chunk: Buffer) => void) {
-        if (this.path && this.exec && await this.projectExists(name)) {
-            this.exec('docker-compose', ['--no-ansi', 'logs', '--follow'], {
-                working_dir: this.path + '/' + name,
-                onStdout: onStdout
-            });
+    async composeLogsStream(name: string, onStdout: (chunk: Buffer) => void): Promise<() => void> {
+        if (this.path && this.shell && await this.projectExists(name)) {
+            return await this.shell(`cd ${this.path}/${name} && docker-compose --no-ansi logs --follow --tail=200`, onStdout);
         }
+        return () => {};
     }
 }

@@ -40,47 +40,52 @@ export default defineComponent({
             mode: <'message'|'yesno'> 'message',
             consoleOutput: <string|null> null,
             modal: <Modal> {},
-            onYesClicked: () => {}
+            onYesClicked: () => {},
+            onClosed: () => {}
         }
     },
     mounted() {
         this.modal = new Modal(<Element> document.getElementById('messageModal'), {});
+        (<Element> document.getElementById('messageModal')).addEventListener('hidden.bs.modal', () => {
+          this.onClosed();
+        });
     },
     methods: {
-        show(title: string, text: string) {
-            this.title = title;
-            this.text = text;
+        reset() {
+            this.title = '';
+            this.text = '';
             this.html = '';
             this.consoleOutput = null;
             this.mode = 'message';
+        },
+        show(title: string, text: string) {
+            this.reset()
+
+            this.title = title;
+            this.text = text;
 
             this.modal.show();
         },
         showHtml(title: string, html: string) {
+            this.reset();
             this.title = title;
-            this.text = '';
             this.html = html;
-            this.consoleOutput = null;
-            this.mode = 'message';
 
             this.modal.show();
         },
         showConsole(title: string) {
+            this.reset();
             this.title = title;
-            this.text = '';
-            this.html = '';
             this.consoleOutput = '';
-            this.mode = 'message';
 
             this.modal.show();
         },
         showYesNo(title: string, text: string, yesCallback: () => Promise<void>) {
+            this.reset();
             this.title = title;
             this.text = text;
-            this.html = '';
-            this.consoleOutput = null;
-
             this.mode = 'yesno';
+
             this.onYesClicked = async () => {
               await yesCallback();
               this.modal.hide();

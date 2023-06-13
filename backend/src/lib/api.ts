@@ -88,9 +88,10 @@ export namespace endpoints {
             export type post_resp_type = string;
 
             export namespace logs {
-                export const url = "/api/stack/:name/compose/logs";
-                export type params = {
-                    name: string
+                export const url = "/api/compose_logs";
+                export type param = {
+                    token: string,      // no headers in websocket :(
+                    stack_name: string
                 };
             }
         }

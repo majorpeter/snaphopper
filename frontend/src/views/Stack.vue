@@ -12,7 +12,7 @@
         <li><a class="dropdown-item" :class="dockerComposeExecuting ? 'disabled' : ''" title="Stop services" @click="dockerComposeDown" href="#">Down</a></li>
         <li><a class="dropdown-item" :class="dockerComposeExecuting ? 'disabled' : ''" title="Build custom containers" @click="dockerComposeBuild" href="#">Build</a></li>
         <div class="dropdown-divider"></div>
-        <li><a class="dropdown-item disabled" title="Watch logs" @click="dockerComposeLogsWatch" href="#">Logs</a></li>
+        <li><a class="dropdown-item" :class="dockerComposeExecuting ? 'disabled' : ''" title="Watch logs" @click="dockerComposeLogsWatch" href="#">Logs</a></li>
     </ul>
 </h3>
 
@@ -165,7 +165,7 @@ import DockerComposeFile from './Stack/DockerComposeFile.vue';
 import StackSnapshotClone from './Stack/StackSnapshotClone.vue';
 import ContainerInfo from '@/components/ContainerInfo.vue';
 
-import ApiClient from '@/services/ApiClient';
+import ApiClient, {WebSocketClient} from '@/services/ApiClient';
 import containerStatusColor from '@/services/ContainerStatusColor';
 
 export function generateSnapshotName(prefix: string): string {
@@ -302,13 +302,22 @@ export default defineComponent({
             this.dockerComposeExecuting = false;
         },
         dockerComposeLogsWatch() {
+            const ws = WebSocketClient(endpoints.stack.docker_compose.logs.url);
+
             const messageModal = <typeof MessageModal> this.$refs.message;
             messageModal.showConsole('Logs');
-            ApiClient().get(endpoints.stack.docker_compose.logs.url.replace(':name', <string> this.name), {
-                onDownloadProgress(progressEvent) {
-                    messageModal.consoleOutput = progressEvent.event.currentTarget.response;
-                }
-            });
+            messageModal.onClosed = () => {
+                ws.close();
+            };
+            ws.onopen = (ev: Event) => {
+                ws.send(JSON.stringify(<endpoints.stack.docker_compose.logs.param> {
+                    token: ws.token,
+                    stack_name: this.name,
+                }));
+            };
+            ws.onmessage = (event: MessageEvent<any>) => {
+                messageModal.consoleOutput += event.data;
+            };
         },
         showSnapshotCreateDialog() {
             this.createSnapshotModal.model = {

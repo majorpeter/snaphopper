@@ -14,6 +14,7 @@ import StackController from './controllers/StackController';
 import { Applications } from './lib/applications';
 import { setAuthenticationDisabled } from './lib/policies';
 import UpdateController from './controllers/UpdateController';
+import { setTimeout } from 'timers/promises';
 
 const config = Config.init();
 
@@ -34,7 +35,7 @@ const server = app.listen(config.port, () => {
 
 LoginController(app, config);
 ConfigController(app, config, server, setupSshConnectionServices);
-StackController(app, docker, applications, zfs);
+StackController(app, server, docker, applications, zfs);
 SnapshotController(app, zfs);
 UpdateController(app, config);
 
@@ -74,6 +75,22 @@ async function setupSshConnectionServices() {
                 onStderr: options?.onStderr
             }));
             return result.stdout;
+        }, async (command_line, onStdout) => {
+            const channel = await ssh.requestShell({modes: {
+                ECHO: 0     // do not echo the command we send
+            }});
+            await setTimeout(500);
+            channel.read();  // read everything from shell before actual command output
+            channel.write(command_line + '\n');
+            const periodic = setInterval(() => {
+                if (channel.readableLength > 0) {
+                    onStdout(channel.read());
+                }
+            }, 500);
+            return () => {
+                clearInterval(periodic);
+                channel.destroy();
+            };
         });
     } catch (e: any) {
         console.log(e);
