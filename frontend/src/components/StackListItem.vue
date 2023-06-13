@@ -15,19 +15,15 @@ const props = defineProps<{
       <div class="gap-2 w-100 justify-content-between">
           <h6 class="mb-0 "><strong>{{ name }}</strong></h6>
           <div>
-          <table class="table table-hover mb-0 opacity-75" v-if="value.status=='ok'"><tbody v-for="item in value.services">
+          <table class="table table-hover mb-0 opacity-75" v-if="value.status=='ok'"><tbody v-for="item, service_name in value.services">
             <tr>
-              <td class="col-sm-3"><strong>{{ item.service_name }}</strong></td>
+              <td class="col-sm-3"><strong>{{ service_name }}</strong></td>
               <td class="col-sm-4">
                 <template v-if="item.container_name">{{ item.container_name }}</template>
                 <span v-else class="text-muted">N/A</span>
               </td>
-              <td class="col-sm-4" :title="item.image_id">
-                <em v-if="item.custom_build">custom build</em>
-                <template v-else="item.image_name">
-                  {{ item.image_name }}
-                  <UpdateCheckBadge :image_name="item.image_name" :id="item.image_id" :digest="item.image_digest" v-if="item.image_id"></UpdateCheckBadge>
-                </template>
+              <td class="col-sm-4">
+                <ContainerInfo :service-data="item"></ContainerInfo>
               </td>
               <td class="col-sm-1" :class="containerStatusColor(item.status)">{{ item.status }}</td>
             </tr>
@@ -46,12 +42,12 @@ const props = defineProps<{
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import UpdateCheckBadge from './UpdateCheckBadge.vue';
+import ContainerInfo from './ContainerInfo.vue';
 import containerStatusColor from '@/services/ContainerStatusColor';
 
 export default defineComponent({
   components: {
-    UpdateCheckBadge,
+    ContainerInfo,
 },
   data() {
     return {

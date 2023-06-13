@@ -1,6 +1,25 @@
 export namespace endpoints {
     export type DockerContainerStatus = 'N/A' | 'created'|'running'|'paused'|'restarting'|'removing'|'exited'|'dead';
 
+    export type ServiceData = {
+        dockerfile_image?: {
+            name?: string;
+            url?: string;
+            id?: string;
+            digest?: string;
+        }
+        existing_image?: {
+            name: string;
+            id: string;
+            digest?: string;
+            url?: string;
+            base?: string;
+            base_url?: string;
+        };
+        container_name?: string;
+        status: DockerContainerStatus;
+    };
+
     export namespace login {
         export const url = '/api/logn';
         export interface type {
@@ -18,15 +37,7 @@ export namespace endpoints {
             connected: boolean;
             projects: {[key: string]: {
                     status: 'ok'|'invalid_compose_file'|'access_error',
-                    services: {
-                        service_name: string;
-                        container_name?: string;
-                        image_name?: string;
-                        image_id?: string;
-                        image_digest?: string;
-                        custom_build: boolean;
-                        status: DockerContainerStatus;
-                    }[];
+                    services: {[service_name: string]: ServiceData};
                 }
             };
         };
@@ -40,24 +51,7 @@ export namespace endpoints {
         };
 
         export interface type {
-            services: {[service_name: string]: {
-                dockerfile_image?: {
-                    name?: string;
-                    url?: string;
-                    id?: string;
-                    digest?: string;
-                }
-                existing_image?: {
-                    name: string;
-                    id: string;
-                    digest?: string;
-                    url?: string;
-                    base?: string;
-                    base_url?: string;
-                };
-                container_name?: string;
-                status: DockerContainerStatus;
-            }};
+            services: {[service_name: string]: ServiceData};
             working_directory?: string;
             compose_config_file_name?: string;
             compose_config_invalid?: boolean;

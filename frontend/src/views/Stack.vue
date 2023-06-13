@@ -73,26 +73,7 @@
         <span class="text-muted" v-else>N/A</span>
     </td>
     <td>
-        <template v-if="i.existing_image">
-            <template v-if="i.existing_image.url">
-                <a :href="i.existing_image.url" :title="i.existing_image.id" target="_blank">{{ i.existing_image.name }}</a>
-                <UpdateCheckBadge :image_name="i.existing_image.name" :id="i.existing_image.id" :digest="i.existing_image.digest"></UpdateCheckBadge>
-            </template>
-            <template v-else>
-                <span :title="i.existing_image.id">{{ i.existing_image.name }}</span> <strong>(custom)</strong><br/>
-                <strong>from</strong> <a :href="i.existing_image.base_url!" target="_blank">{{ i.existing_image.base }}</a>
-            </template>
-
-            <span class="badge bg-info ms-2" v-if="i.dockerfile_image && i.dockerfile_image.name != i.existing_image.name" title="Docker compose file changed since this container was created.">
-            Config changed
-            </span>
-        </template>
-        <template v-else-if="i.dockerfile_image?.name">
-            <a :href="i.dockerfile_image.url" target="_blank" :title="i.dockerfile_image.id">{{ i.dockerfile_image?.name }}</a>
-            <UpdateCheckBadge v-if="i.dockerfile_image.id" :image_name="i.dockerfile_image.name" :id="i.dockerfile_image.id" :digest="i.dockerfile_image.digest"></UpdateCheckBadge>
-            <span v-else class="badge bg-info ms-2">Not available</span>
-        </template>
-        <span v-else>custom</span>
+        <ContainerInfo :service-data="i"></ContainerInfo>
     </td>
     <td :class="containerStatusColor(i.status)">{{ i.status }}</td>
 </tr></tbody></table></div>
@@ -181,7 +162,7 @@ import { Modal } from 'bootstrap';
 import MessageModal from '@/components/MessageModal.vue';
 import DockerComposeFile from './Stack/DockerComposeFile.vue';
 import StackSnapshotClone from './Stack/StackSnapshotClone.vue';
-import UpdateCheckBadge from '@/components/UpdateCheckBadge.vue';
+import ContainerInfo from '@/components/ContainerInfo.vue';
 
 import ApiClient from '@/services/ApiClient';
 import containerStatusColor from '@/services/ContainerStatusColor';
@@ -200,7 +181,7 @@ export default defineComponent({
         MessageModal,
         DockerComposeFile,
         StackSnapshotClone,
-        UpdateCheckBadge
+        ContainerInfo
     },
     data() {
         return {
