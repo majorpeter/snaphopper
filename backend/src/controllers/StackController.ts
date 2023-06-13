@@ -6,7 +6,7 @@ import { Zfs } from '../lib/zfs';
 import { DockerHub } from '../lib/dockerhub';
 import { Applications, DockerComposeYaml } from '../lib/applications';
 
-async function extractServiceData(project: DockerComposeYaml, stack: ContainerInfo[]|null, docker: Docker) {
+async function extractServiceData(project_name: string, project: DockerComposeYaml, stack: ContainerInfo[]|null, docker: Docker, applications: Applications) {
     let result: {[name: string]: endpoints.ServiceData} = {};
 
     for (const service_name of Object.keys(project.services)) {
@@ -18,12 +18,23 @@ async function extractServiceData(project: DockerComposeYaml, stack: ContainerIn
             } catch (e) {}
         }
 
+
+        let custom_build: Exclude<endpoints.ServiceData['dockerfile_image'], undefined>['custom_build'];
+        if (project.services[service_name].build != undefined) {
+            if (await applications.isCustomContainerGitRepo(project_name, project.services[service_name].build!)) {
+                custom_build = 'git';
+            } else {
+                custom_build = 'local';
+            }
+        }
+
         result[service_name] = {
             dockerfile_image: {
                 name: image_name,
                 url: image_name ? DockerHub.getUrl(image_name.split(':')[0]) : undefined,
                 id: image_data.length ? image_data[0].Id : undefined,
-                digest: image_data.length && image_data[0].RepoDigests.length ? image_data[0].RepoDigests[0].split('@')[1] : undefined
+                digest: image_data.length && image_data[0].RepoDigests.length ? image_data[0].RepoDigests[0].split('@')[1] : undefined,
+                custom_build: custom_build
             },
             status: 'N/A'
         };
@@ -80,7 +91,7 @@ export default function(app: Express, docker: Docker, applications: Applications
 
                 if (apps[project_name].compose) {
                     try {
-                        data.projects[project_name].services = await extractServiceData(apps[project_name].compose!, projects[project_name], docker);
+                        data.projects[project_name].services = await extractServiceData(project_name, apps[project_name].compose!, projects[project_name], docker, applications);
                     } catch (e) {
                         data.projects[project_name].status = 'invalid_compose_file';
                     }
@@ -107,7 +118,7 @@ export default function(app: Express, docker: Docker, applications: Applications
                 const stack = await docker.getDockerComposeProject(req.params.name);
                 if (project) {
                     try {
-                        data.services = await extractServiceData(project, stack, docker);
+                        data.services = await extractServiceData(req.params.name, project, stack, docker, applications);
                     } catch (e) {
                         data.compose_config_invalid = true;
                     }

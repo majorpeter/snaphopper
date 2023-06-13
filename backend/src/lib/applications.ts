@@ -78,6 +78,13 @@ export class Applications {
         return false;
     }
 
+    async isCustomContainerGitRepo(name: string, buildLocation: string): Promise<boolean> {
+        if (this.path && this.exec && await this.projectExists(name)) {
+            return (await this.exec('ls', [this.path + '/' + name + '/' + buildLocation + '/.git'])) != '';
+        }
+        return false;
+    }
+
     async getAllProjects() {
         let result: {[key: string]: {
             compose?: DockerComposeYaml

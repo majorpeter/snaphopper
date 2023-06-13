@@ -7,6 +7,7 @@ export namespace endpoints {
             url?: string;
             id?: string;
             digest?: string;
+            custom_build?: 'local'|'git';
         }
         existing_image?: {
             name: string;
