@@ -16,6 +16,7 @@ export type Type = {
     ssh_username?: string;
     ssh_privkey?: string;
     applications_path?: string;
+    container_update_checks: boolean;
     auth_disabled: boolean;  // for dev server
     cors_enabled: boolean;  // for dev server
 };
@@ -23,6 +24,7 @@ export type Type = {
 export function init(): Type {
     let config: Type = {
         port: 8080,
+        container_update_checks: true,
         auth_disabled: false,
         cors_enabled: false
     };

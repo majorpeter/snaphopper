@@ -36,7 +36,7 @@ LoginController(app, config);
 ConfigController(app, config, server, setupSshConnectionServices);
 StackController(app, docker, applications, zfs);
 SnapshotController(app, zfs);
-UpdateController(app);
+UpdateController(app, config);
 
 setupSshConnectionServices();
 setAuthenticationDisabled(config.auth_disabled);

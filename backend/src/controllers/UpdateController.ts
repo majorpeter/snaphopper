@@ -2,8 +2,10 @@ import { Express } from "express";
 import { endpoints } from "../lib/api";
 import { DockerHub } from "../lib/dockerhub";
 import { AxiosError } from "axios";
+import { Config } from "../lib/config";
 
 class UpdateChecker {
+    private config: Readonly<Config.Type>;
     private cache: {[image_name: string]: {
         latest_hash: string
         check_timestamp: number;
@@ -12,6 +14,10 @@ class UpdateChecker {
     private referenceCache: {[reference: string]: string|null} = {};
 
     static max_cache_age_ms = 5 * 60 * 1000;
+
+    constructor(config: Readonly<Config.Type>) {
+        this.config = config;
+    }
 
     private async fetchLatestHashForImage(image_name: string): Promise<boolean> {
         try {
@@ -72,26 +78,29 @@ class UpdateChecker {
     }
 
     async isUpdateAvailable(image_name_with_tag: string, id: string, digest: string): Promise<endpoints.updates.resp_type> {
-        const image_name = image_name_with_tag.split(':')[0];
-        if (!this.isCached(image_name)) {
-            if (!await this.fetchLatestHashForImage(image_name)) {
-                return {state: 'error'};
+        if (this.config.container_update_checks) {
+            const image_name = image_name_with_tag.split(':')[0];
+            if (!this.isCached(image_name)) {
+                if (!await this.fetchLatestHashForImage(image_name)) {
+                    return {state: 'error'};
+                }
             }
-        }
 
-        if ((this.cache[image_name].latest_hash != id) && (this.cache[image_name].latest_hash != digest)) {
-            return {
-                state: 'outdated',
-                latest_hash: this.cache[image_name].latest_hash
-            };
-        }
+            if ((this.cache[image_name].latest_hash != id) && (this.cache[image_name].latest_hash != digest)) {
+                return {
+                    state: 'outdated',
+                    latest_hash: this.cache[image_name].latest_hash
+                };
+            }
 
-        return {state:'up-to-date'};
+            return {state:'up-to-date'};
+        }
+        return {state: 'check_disabled'};
     }
 }
 
-export default function (app: Express) {
-    const checker: UpdateChecker = new UpdateChecker();
+export default function (app: Express, config: Readonly<Config.Type>) {
+    const checker: UpdateChecker = new UpdateChecker(config);
 
     app.get<{}, endpoints.updates.resp_type, {}, endpoints.updates.query>(endpoints.updates.url, async (req, res) => {
         res.send(await checker.isUpdateAvailable(req.query.image_name, req.query.id, req.query.digest));

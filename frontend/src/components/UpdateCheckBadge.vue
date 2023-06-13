@@ -1,6 +1,7 @@
 <template>
 <span class="badge bg-primary ms-2" @click="" v-if="data?.state=='outdated'" :title="data.latest_hash">Update</span>
 <span class="badge bg-warning ms-2" @click="" v-if="data?.state=='error'">Error</span>
+<span class="badge bg-dark ms-2" v-if="data?.state=='check_disabled'" title="Update checks are disabled">N/A</span>
 <span class="spinner-border spinner-border-sm text-primary ms-2" role="status" aria-hidden="true" v-else-if="!data"></span>
 </template>
 

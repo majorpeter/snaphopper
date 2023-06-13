@@ -28,7 +28,7 @@ export function isTokenValid(token: string): boolean {
     return false;
 }
 
-export default function(app: Express, config: Config.Type) {
+export default function(app: Express, config: Readonly<Config.Type>) {
     validSessionToken = Config.restoreSession();
 
     app.post<{}, endpoints.login.resp_type, endpoints.login.type>(endpoints.login.url, async (req, res) => {
