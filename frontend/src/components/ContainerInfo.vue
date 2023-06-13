@@ -9,7 +9,7 @@
                 <strong>from</strong> <a :href="serviceData.existing_image.base_url!" target="_blank">{{ serviceData.existing_image.base }}</a>
             </template>
 
-            <span class="badge bg-info ms-2" v-if="serviceData.dockerfile_image && serviceData.dockerfile_image.name != serviceData.existing_image.name" title="Docker compose file changed since this container was created.">
+            <span class="badge bg-info ms-2" v-if="serviceData.dockerfile_image?.name && serviceData.dockerfile_image.name != serviceData.existing_image.name" title="Docker compose file changed since this container was created.">
             Config changed
             </span>
         </template>
