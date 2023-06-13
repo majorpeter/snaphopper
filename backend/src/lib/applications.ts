@@ -85,6 +85,21 @@ export class Applications {
         return false;
     }
 
+    async pullCustomContainerGitRepo(name: string, serviceName: string, onStdout: (chunk: Buffer) => void): Promise<void> {
+        if (this.exec) {
+            const project = await this.getProject(name);
+            if (project) {
+                const buildLocation = project.services[serviceName].build;
+                if (buildLocation) {
+                    await this.exec('git', ['pull'], {
+                        onStdout: onStdout,
+                        working_dir: this.path + '/' + name + '/' + buildLocation
+                    });
+                }
+            }
+        }
+    }
+
     async getAllProjects() {
         let result: {[key: string]: {
             compose?: DockerComposeYaml

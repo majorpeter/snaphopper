@@ -234,4 +234,17 @@ export default function(app: Express, docker: Docker, applications: Applications
             res.sendStatus(500);
         }
     });
+
+    app.post<endpoints.stack.git.params, endpoints.stack.git.post_resp_type, endpoints.stack.git.post_req_type>(endpoints.stack.git.url, async (req, res) => {
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Content-Encoding': 'none'
+        });
+
+        await applications.pullCustomContainerGitRepo(req.params.name, req.body.service_name, (chunk: Buffer) => {
+            res.write(chunk);
+        });
+        res.end();
+    });
 };

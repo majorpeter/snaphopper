@@ -74,7 +74,7 @@
         <span class="text-muted" v-else>N/A</span>
     </td>
     <td>
-        <ContainerInfo :service-data="i"></ContainerInfo>
+        <ContainerInfo :stack-name="<string> name" :service-name="<string> service_name" :service-data="i" :message-modal="$refs.message"></ContainerInfo>
     </td>
     <td :class="containerStatusColor(i.status)">{{ i.status }}</td>
 </tr></tbody></table></div>

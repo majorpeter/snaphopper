@@ -94,6 +94,17 @@ export namespace endpoints {
                 };
             }
         }
+
+        export namespace git {
+            export const url = "/api/stack/:name/git";
+            export type params = {
+                name: string
+            };
+            export type post_req_type = {
+                service_name: string;
+            };
+            export type post_resp_type = string;
+        }
     }
 
     export namespace snapshot {
