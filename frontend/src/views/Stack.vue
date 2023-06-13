@@ -10,6 +10,7 @@
     <ul class="dropdown-menu dropdown-menu-end">
         <li><a class="dropdown-item" :class="dockerComposeExecuting ? 'disabled' : ''" title="Start or recreate services" @click="dockerComposeUp" href="#">Up</a></li>
         <li><a class="dropdown-item" :class="dockerComposeExecuting ? 'disabled' : ''" title="Stop services" @click="dockerComposeDown" href="#">Down</a></li>
+        <li><a class="dropdown-item" :class="dockerComposeExecuting ? 'disabled' : ''" title="Build custom containers" @click="dockerComposeBuild" href="#">Build</a></li>
         <div class="dropdown-divider"></div>
         <li><a class="dropdown-item disabled" title="Watch logs" @click="dockerComposeLogsWatch" href="#">Logs</a></li>
     </ul>
@@ -273,6 +274,30 @@ export default defineComponent({
                 this.reloadData();
             } catch (e) {
                 (<typeof MessageModal> this.$refs.message).show('"docker-compose down" failed', 'Command failed');
+            }
+            this.dockerComposeExecuting = false;
+        },
+        async dockerComposeBuild() {
+            if (this.dockerComposeExecuting) {
+                return;
+            }
+
+            const messageModal = <typeof MessageModal> this.$refs.message;
+            this.dockerComposeExecuting = true;
+            messageModal.showConsole('Compose build');
+            messageModal.showSpinner = true;
+            try {
+                await ApiClient().post(endpoints.stack.docker_compose.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose.post_req_type> {
+                    command: 'build'
+                }, {
+                    onDownloadProgress(progressEvent) {
+                        messageModal.consoleOutput = progressEvent.event.currentTarget.response;
+                    }
+                });
+                messageModal.showSpinner = false;
+                this.reloadData();
+            } catch (e) {
+                (<typeof MessageModal> this.$refs.message).show('"docker-compose build" failed', 'Command failed');
             }
             this.dockerComposeExecuting = false;
         },

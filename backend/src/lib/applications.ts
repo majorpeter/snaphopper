@@ -118,6 +118,16 @@ export class Applications {
         }
     }
 
+    async composeBuild(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
+        if (this.path && this.exec && await this.projectExists(name)) {
+            await this.exec('docker-compose', ['--no-ansi', 'build'], {
+                working_dir: this.path + '/' + name,
+                onStdout: onStdout,
+                onStderr: onStdout
+            });
+        }
+    }
+
     //TODO stop watching when finished
     async composeLogs(name: string, onStdout: (chunk: Buffer) => void) {
         if (this.path && this.exec && await this.projectExists(name)) {

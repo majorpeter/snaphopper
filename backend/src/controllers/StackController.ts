@@ -170,6 +170,16 @@ export default function(app: Express, docker: Docker, applications: Applications
                 res.write(chunk);
             });
             res.end();
+        } else if (req.body.command == 'build') {
+            res.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Content-Encoding': 'none'
+            });
+            await applications.composeBuild(req.params.name, (chunk: Buffer) => {
+                res.write(chunk);
+            });
+            res.end();
         } else {
             res.sendStatus(400);
         }
