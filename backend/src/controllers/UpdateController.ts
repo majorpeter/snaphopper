@@ -19,10 +19,13 @@ class UpdateChecker {
         this.config = config;
     }
 
-    private async fetchLatestHashForImage(image_name: string): Promise<boolean> {
+    private async fetchLatestHashForImage(image_name: string): Promise<'ok'|'access_token_required'|'unknown_content_type'|'rate_limit'|'unknown_error'> {
         try {
             const manifest = (await DockerHub.getManifest(image_name));
 
+            if (manifest.error) {
+                return manifest.error;
+            }
             let remote_hash;
             if (manifest.dockerManifest) {
                 remote_hash = manifest.dockerManifest.config.digest;
@@ -35,14 +38,15 @@ class UpdateChecker {
                     latest_hash: remote_hash,
                     check_timestamp: new Date().getTime()
                 };
-                return true;
+                return 'ok';
             }
         } catch (e) {
             if ((<AxiosError> e).response?.status == 429) {
                 console.log('Ratelimit exceeded');
+                return 'rate_limit';
             }
         }
-        return false;
+        return 'unknown_error';
     }
 
     private isCached(image_name: string): boolean {
@@ -81,8 +85,9 @@ class UpdateChecker {
         if (this.config.container_update_checks) {
             const image_name = image_name_with_tag.split(':')[0];
             if (!this.isCached(image_name)) {
-                if (!await this.fetchLatestHashForImage(image_name)) {
-                    return {state: 'error'};
+                const fetchResult = await this.fetchLatestHashForImage(image_name);
+                if (fetchResult != 'ok') {
+                    return {state: fetchResult};
                 }
             }
 

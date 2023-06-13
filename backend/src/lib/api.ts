@@ -175,7 +175,7 @@ export namespace endpoints {
             digest: string;
         };
         export type resp_type = {
-            state: 'up-to-date'|'outdated'|'error'|'check_disabled'
+            state: 'up-to-date'|'outdated'|'check_disabled'|'access_token_required'|'unknown_content_type'|'rate_limit'|'unknown_error'
             latest_hash?: string
         };
     }

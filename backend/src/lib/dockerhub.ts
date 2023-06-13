@@ -26,15 +26,19 @@ export namespace DockerHub {
     /**
      * @see https://gitlab.com/MatthiasLohr/omnibus-gitlab-management-scripts/-/blob/main/docker-image-update-check.sh
      */
-    export async function getManifest(imageName: string): Promise<ManifestResponse> {
-        if (imageName.split(':')[0].split('/')[0].indexOf('.') != -1) {
-            return {};    // custom registry not supported
-        }
-
+    export async function getManifest(imageName: string): Promise<ManifestResponse & {error?: 'access_token_required'|'unknown_content_type'}> {
         let imageRegistry: string;
         let imageRegistryApi: string;
         let imagePathFull: string;
-        if (imageName.indexOf('/') == -1) {
+
+        if (imageName.split(':')[0].split('/')[0].indexOf('.') != -1) {
+            imageRegistry = imageRegistryApi = imageName.split('/')[0];
+            imagePathFull = imageName.substring(imageName.indexOf('/') + 1);
+
+            if (imageRegistry == 'ghcr.io') {
+                return {error: 'access_token_required'};
+            }
+        } else if (imageName.indexOf('/') == -1) {
             imageRegistry = "docker.io";
             imageRegistryApi = "registry-1.docker.io";
             imagePathFull = "library/" + imageName;
@@ -63,7 +67,7 @@ export namespace DockerHub {
         };
         const manifestResp = await axios.get(`https://${imageRegistryApi}/v2/${imagePath}/manifests/${imageTag}`, {headers: {
             'Accept': Object.values(supportedContentTypes).join(', '),
-            'Authorization':  `Bearer ${await getAuthToken(imagePath)}`
+            'Authorization':  `Bearer ${await getAuthToken(imagePath, imageRegistryApi)}`
         }});
 
         const contentType = (<AxiosResponseHeaders> manifestResp.headers).getContentType()?.toString();
@@ -78,7 +82,7 @@ export namespace DockerHub {
                 ociImageIndex: manifestResp.data
             };
         }
-        return {};
+        return {error: 'unknown_content_type'};
     }
 
     export async function getManifestByReference(reference: string) {
@@ -92,7 +96,7 @@ export namespace DockerHub {
         const imageDigest = reference.split('@')[1];
         const manifestResp = await axios.get(`https://${imageRegistryApi}/v2/${imagePath}/manifests/${imageDigest}`, {headers: {
             'Accept': Object.values(supportedContentTypes).join(', '),
-            'Authorization':  `Bearer ${await getAuthToken(imagePath)}`
+            'Authorization':  `Bearer ${await getAuthToken(imagePath, imageRegistryApi)}`
         }});
 
         const contentType = (<AxiosResponseHeaders> manifestResp.headers).getContentType()?.toString();
@@ -106,13 +110,11 @@ export namespace DockerHub {
 
     export async function getImageTags(name: string): Promise<string[]> {
         return (await axios.get(`https://registry-1.docker.io/v2/${name}/tags/list`, {headers: {
-            'Authorization':  `Bearer ${await getAuthToken(name)}`
+            'Authorization':  `Bearer ${await getAuthToken(name, 'registry-1.docker.io')}`
         }})).data.tags;
     }
 
-    async function getAuthToken(imagePath:string): Promise<string> {
-        const imageRegistryApi = "registry-1.docker.io";
-
+    async function getAuthToken(imagePath: string, imageRegistryApi: string): Promise<string> {
         let authDomainService: string|null = null;
         try {
             await axios.head(`https://${imageRegistryApi}/v2/`);
