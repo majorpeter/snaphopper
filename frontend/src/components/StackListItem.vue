@@ -23,7 +23,7 @@ const props = defineProps<{
                 <span v-else class="text-muted">N/A</span>
               </td>
               <td class="col-sm-4">
-                <ContainerInfo :service-data="item"></ContainerInfo>
+                <ContainerInfo :service-name="<string> service_name" :stack-name="name" :service-data="item"></ContainerInfo>
               </td>
               <td class="col-sm-1" :class="containerStatusColor(item.status)">{{ item.status }}</td>
             </tr>
