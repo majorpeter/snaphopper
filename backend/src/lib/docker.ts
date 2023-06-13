@@ -45,6 +45,7 @@ export interface ImageInfo {
 
 export class Docker {
     private exec: exec|undefined;
+    private imageInfoCache: {[id: string]: ImageInfo} = {};
 
     static projectLabel = 'com.docker.compose.project';
     static workingDirLabel = 'com.docker.compose.project.working_dir';
@@ -72,8 +73,22 @@ export class Docker {
         return JSON.parse(await this.exec!('docker', ['container', 'inspect', ...names]));
     }
 
-    async inspectImages(names: string[]): Promise<[ImageInfo]> {
-        return JSON.parse(await this.exec!('docker', ['image', 'inspect', ...names]));
+    async inspectImages(names: string[]): Promise<ImageInfo[]> {
+        // default to 'latest' tag if not loooking for a tag / sha256
+        names = names.map(i => i.indexOf(':') != -1 ? i : i + ':latest');
+
+        const notCachedIds = names.filter((i) => !Object.keys(this.imageInfoCache).includes(i));
+        const data: ImageInfo[] = notCachedIds.length ? JSON.parse(await this.exec!('docker', ['image', 'inspect', ...notCachedIds])) : [];
+        for (const i of data) {
+            this.imageInfoCache[i.Id] = i;
+            for (const j of i.RepoTags) {
+                this.imageInfoCache[j] = i;
+            }
+        }
+
+        return names.map((i) => {
+            return this.imageInfoCache[i];
+        });
     }
 
     async getDockerComposeProjects(): Promise<{[key: string]: ContainerInfo[]}> {
