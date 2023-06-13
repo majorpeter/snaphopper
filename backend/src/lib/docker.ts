@@ -84,9 +84,15 @@ export class Docker {
             for (const j of i.RepoTags) {
                 this.imageInfoCache[j] = i;
             }
+            for (const j of i.RepoDigests) {
+                this.imageInfoCache[j] = i;
+            }
         }
 
         return names.map((i) => {
+            if (!Object.keys(this.imageInfoCache).includes(i)) {
+                console.log(`Image info caching failed for ${i}`);
+            }
             return this.imageInfoCache[i];
         });
     }
