@@ -28,6 +28,11 @@ docker run --name snaphopper -p 8080:8080 snaphopper
 
 The application listens on port `8080` and uses the password `admin` by default. Both can be changed on the _Config_ page.
 
+[NOTE]
+====
+Use the environment variable `CONFIG_DIR` to make configuration persistent between updates/rebuilds.
+====
+
 == Test environment
 
 The application was developed and tested on a link:https://www.truenas.com/truenas-scale/[TrueNAS Scale] _22.12.2_ host with the following dependencies:

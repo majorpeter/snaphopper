@@ -17,5 +17,8 @@ COPY frontend/package.json frontend/tsconfig.json frontend/vite.config.js fronte
 COPY frontend/src frontend/src
 RUN cd frontend; npm run-script build
 
+VOLUME [ "/config" ]
+ENV CONFIG_DIR=/config
+
 EXPOSE 8080
 ENTRYPOINT [ "node", "backend/dist/server.js" ]

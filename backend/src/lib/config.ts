@@ -3,8 +3,9 @@ import fs from 'fs';
 import {promises as fsPromises} from 'fs';
 import bcrypt from 'bcryptjs';
 
-const config_path = path.resolve(__dirname, '../config.json');
-const session_path = path.resolve(__dirname, '../session.json');
+const CONFIG_DIR = process.env.CONFIG_DIR || __dirname;
+const config_path = path.resolve(CONFIG_DIR, '../config.json');
+const session_path = path.resolve(CONFIG_DIR, '../session.json');
 
 export namespace Config {
 
