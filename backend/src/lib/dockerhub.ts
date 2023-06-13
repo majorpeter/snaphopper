@@ -130,8 +130,10 @@ export namespace DockerHub {
     }
 
     export function getUrl(name: string): string {
-        //TODO handle ghcr.io
-        if (name.indexOf('/') != -1) {
+        if (name.split('/')[0].indexOf('.') != -1) {
+            return 'https://' + name;
+        }
+        else if (name.indexOf('/') != -1) {
             return 'https://hub.docker.com/r/' + name;
         } else {
             return 'https://hub.docker.com/_/' + name;
