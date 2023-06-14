@@ -1,4 +1,4 @@
-import { UpdateChecker } from "../../../controllers/UpdateController";
+import { UpdateChecker } from "../../controllers/UpdateController";
 
 
 describe("UpdateController tests", () => {
