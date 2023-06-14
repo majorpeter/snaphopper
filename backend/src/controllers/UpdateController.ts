@@ -4,7 +4,7 @@ import { DockerHub } from "../lib/dockerhub";
 import { AxiosError } from "axios";
 import { Config } from "../lib/config";
 
-class UpdateChecker {
+export class UpdateChecker {
     private config: Readonly<Config.Type>;
     private cache: {[image_name: string]: {
         latest_hash: string
@@ -14,6 +14,10 @@ class UpdateChecker {
     private referenceCache: {[reference: string]: string|null} = {};
 
     static max_cache_age_ms = 5 * 60 * 1000;
+
+    static stripImageTagFromName(name: string): string {
+        return name.split(':')[0];
+    }
 
     constructor(config: Readonly<Config.Type>) {
         this.config = config;
@@ -83,7 +87,7 @@ class UpdateChecker {
 
     async isUpdateAvailable(image_name_with_tag: string, id: string, digest: string): Promise<endpoints.updates.resp_type> {
         if (this.config.container_update_checks) {
-            const image_name = image_name_with_tag.split(':')[0];
+            const image_name = UpdateChecker.stripImageTagFromName(image_name_with_tag);
             if (!this.isCached(image_name)) {
                 const fetchResult = await this.fetchLatestHashForImage(image_name);
                 if (fetchResult != 'ok') {
