@@ -23,10 +23,10 @@ export namespace DockerHub {
         dockerContentDigest?: string;
     };
 
-    /**
-     * @see https://gitlab.com/MatthiasLohr/omnibus-gitlab-management-scripts/-/blob/main/docker-image-update-check.sh
-     */
-    export async function getManifest(imageName: string): Promise<ManifestResponse & {error?: 'access_token_required'|'unknown_content_type'}> {
+    export function splitImageName(imageName: string): {
+        result?: Record<'imageRegistryApi' | 'imagePath' | 'imageTag', string>,
+        error?: 'access_token_required'
+    } {
         let imageRegistry: string;
         let imageRegistryApi: string;
         let imagePathFull: string;
@@ -60,6 +60,25 @@ export namespace DockerHub {
             imageTag = "latest";
             imageLocal= imageName + ':latest';
         }
+
+        return {result: {
+            imageRegistryApi: imageRegistryApi,
+            imagePath: imagePath,
+            imageTag: imageTag
+        }};
+    }
+
+    /**
+     * @see https://gitlab.com/MatthiasLohr/omnibus-gitlab-management-scripts/-/blob/main/docker-image-update-check.sh
+     */
+    export async function getManifest(imageName: string): Promise<ManifestResponse & {error?: 'access_token_required'|'unknown_content_type'}> {
+        const imageNameProcessed = splitImageName(imageName);
+
+        if (imageNameProcessed.error) {
+            return {error: imageNameProcessed.error};
+        }
+
+        const {imageRegistryApi, imagePath, imageTag} = imageNameProcessed.result!;
 
         const supportedContentTypes = {
             dockerManifest: 'application/vnd.docker.distribution.manifest.v2+json',
