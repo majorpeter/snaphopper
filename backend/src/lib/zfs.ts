@@ -4,16 +4,17 @@ export class Zfs {
     private exec: exec|undefined;
     private zfsAvailable: boolean = false;
 
-    setAdapter(exec: exec|undefined) {
+    async setAdapter(exec: exec|undefined) {
         this.zfsAvailable = false;
         this.exec = exec;
 
         if (this.exec) {
-            this.exec('sudo', ['zfs', 'list']).then(() => {
+            try {
+                await this.exec('sudo', ['zfs', 'list']);
                 this.zfsAvailable = true;
-            }).catch(() => {
+            } catch {
                 console.log('ZFS functionality not available.');
-            });
+            };
         }
     }
 
