@@ -11,4 +11,7 @@ describe("UpdateController tests", () => {
     test("name in group with tag", () => {
         expect(UpdateChecker.stripImageTagFromName('homeassistant/home-assistant:2023.6.1')).toEqual('homeassistant/home-assistant');
     });
+    test("name with digest", () => {
+        expect(UpdateChecker.stripImageTagFromName('nginx@sha256:af296b188c7b7df99ba960ca614439c99cb7cf252ed7bbc23e90cfda59092305')).toEqual('nginx');
+    });
 });

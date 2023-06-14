@@ -16,7 +16,7 @@ export class UpdateChecker {
     static max_cache_age_ms = 5 * 60 * 1000;
 
     static stripImageTagFromName(name: string): string {
-        return name.split(':')[0];
+        return name.split('@')[0].split(':')[0];
     }
 
     constructor(config: Readonly<Config.Type>) {
