@@ -9,11 +9,13 @@ RUN cd backend; npm install
 COPY frontend/package.json frontend/package.json
 RUN cd frontend; npm install
 
-COPY backend/tsconfig.json backend/
+COPY backend/tsconfig.json backend/jest.config.js backend/
 COPY backend/src backend/src
 RUN cd backend; npm run-script build
 
-COPY frontend/package.json frontend/tsconfig.json frontend/vite.config.js frontend/index.html frontend/
+RUN cd backend; npm run-script test
+
+COPY frontend/tsconfig.json frontend/vite.config.js frontend/index.html frontend/
 COPY frontend/src frontend/src
 RUN cd frontend; npm run-script build
 
