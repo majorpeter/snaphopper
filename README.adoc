@@ -1,5 +1,7 @@
 = snaphopper
 
+image::https://github.com/majorpeter/snaphopper/actions/workflows/test.yml/badge.svg[tests,link=https://github.com/majorpeter/snaphopper/actions/workflows/test.yml]
+
 This application provides an intuitive interface to manage self-hosted applications on a remote server using `docker-compose` and `ZFS`.
 
 == Features
