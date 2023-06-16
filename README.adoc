@@ -35,6 +35,16 @@ The application listens on port `8080` and uses the password `admin` by default.
 Use the environment variable `CONFIG_DIR` to make configuration persistent between updates/rebuilds.
 ====
 
+=== nginx reverse proxy configuration
+
+If you're running the application behind a reverse proxy (e.g. for SSL), make sure to add the following under `location /`:
+
+....
+proxy_buffering off;
+....
+
+This is required for shells to work _interactively_ (docker-compose actions, git pulls), otherwise the proxy will only send the whole command output once it's finished.
+
 == Test environment
 
 The application was developed and tested on a link:https://www.truenas.com/truenas-scale/[TrueNAS Scale] _22.12.2_ host with the following dependencies:
