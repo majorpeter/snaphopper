@@ -16,6 +16,7 @@ import { setAuthenticationDisabled } from './lib/policies';
 import UpdateController from './controllers/UpdateController';
 import { setTimeout } from 'timers/promises';
 
+const frontend_relative_path = '../../frontend/dist';
 const config = Config.init();
 
 const docker: Docker = new Docker();
@@ -27,7 +28,7 @@ if (config.cors_enabled) {
     app.use(cors());
 }
 app.use(bodyParser.json());
-app.use(express.static(path.resolve(__dirname, '../../frontend/dist')));
+app.use(express.static(path.resolve(__dirname, frontend_relative_path)));
 
 const server = app.listen(config.port, () => {
     console.log(`Listening on port ${config.port}.`);
@@ -38,6 +39,14 @@ ConfigController(app, config, server, setupSshConnectionServices);
 StackController(app, server, docker, applications, zfs);
 SnapshotController(app, zfs);
 UpdateController(app, config);
+
+/**
+ * default route gets frontend's index.html
+ * @note this is required to allow page reloads on routes that vue router generates, e.g. when a stack's page is open
+ */
+app.get('*', (_, res) => {
+    res.sendFile(path.resolve(__dirname, frontend_relative_path, 'index.html'));
+});
 
 setupSshConnectionServices();
 setAuthenticationDisabled(config.auth_disabled);
