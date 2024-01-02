@@ -183,6 +183,16 @@ export default function(app: Express, server: http.Server, docker: Docker, appli
                 res.write(chunk);
             });
             res.end();
+        } else if (req.body.command == 'pull') {
+            res.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Content-Encoding': 'none'
+            });
+            await applications.composePull(req.params.name, (chunk: Buffer) => {
+                res.write(chunk);
+            });
+            res.end();
         } else if (req.body.command == 'build') {
             res.writeHead(200, {
                 'Content-Type': 'text/event-stream',

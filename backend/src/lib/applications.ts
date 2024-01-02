@@ -147,6 +147,16 @@ export class Applications {
         }
     }
 
+    async composePull(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
+        if (this.path && this.exec && await this.projectExists(name)) {
+            await this.exec('docker-compose', ['--no-ansi', 'pull'], {
+                working_dir: this.path + '/' + name,
+                onStdout: onStdout,
+                onStderr: onStdout
+            });
+        }
+    }
+
     async composeBuild(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
         if (this.path && this.exec && await this.projectExists(name)) {
             await this.exec('docker-compose', ['--no-ansi', 'build'], {

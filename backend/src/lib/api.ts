@@ -83,7 +83,7 @@ export namespace endpoints {
                 name: string
             };
             export type post_req_type = {
-                command: 'up'|'down'|'build';
+                command: 'up'|'down'|'pull'|'build';
             };
             export type post_resp_type = string;
 
