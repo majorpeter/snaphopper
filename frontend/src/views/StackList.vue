@@ -45,4 +45,8 @@ div.spinner-border {
   width: 150px;
   height: 150px;
 }
+
+div.list-group {
+  width: 100%;
+}
 </style>

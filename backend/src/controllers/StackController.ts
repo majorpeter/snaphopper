@@ -83,24 +83,36 @@ export default function(app: Express, server: http.Server, docker: Docker, appli
 
         if (docker.available) {
             const apps = await applications.getAllProjects();
-            const projects = await docker.getDockerComposeProjects();
 
             for (const project_name of Object.keys(apps)) {
                 data.projects[project_name] = {
                     status: apps[project_name].compose != undefined ? 'ok' : 'access_error',
-                    services: {}
                 };
-
-                if (apps[project_name].compose) {
-                    try {
-                        data.projects[project_name].services = await extractServiceData(project_name, apps[project_name].compose!, projects[project_name]);
-                    } catch (e) {
-                        data.projects[project_name].status = 'invalid_compose_file';
-                    }
-                }
             }
         }
         res.send(data);
+    });
+
+    app.get<endpoints.stack.services.params, endpoints.stack.services.type>(endpoints.stack.services.url, authenticationRequred, async(req, res) => {
+        try {
+            const project = await applications.getProject(req.params.name);
+            const stack = await docker.getDockerComposeProject(req.params.name);
+            if (project) {
+                const services = await extractServiceData(req.params.name, project, stack);
+                res.send({
+                    data: services,
+                    status: 'ok'
+                });
+            } else {
+                res.send({
+                    status: 'invalid_compose_file'
+                });
+            }
+        } catch (e) {
+            res.send({
+                status: 'invalid_compose_file'
+            });
+        }
     });
 
     app.get<endpoints.stack.params, endpoints.stack.type, {}>(endpoints.stack.url, authenticationRequred, async (req, res) => {
