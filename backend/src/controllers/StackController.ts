@@ -109,9 +109,8 @@ export default function(app: Express, server: http.Server, docker: Docker, appli
                 });
             }
         } catch (e) {
-            res.send({
-                status: 'invalid_compose_file'
-            });
+            console.error(e);
+            res.sendStatus(500);
         }
     });
 
