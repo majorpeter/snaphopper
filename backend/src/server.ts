@@ -1,4 +1,4 @@
-import express, {Express} from 'express';
+import express, {Express, Request, Response, NextFunction} from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 
@@ -46,6 +46,15 @@ UpdateController(app, config);
  */
 app.get('*', (_, res) => {
     res.sendFile(path.resolve(__dirname, frontend_relative_path, 'index.html'));
+});
+
+/**
+ * error handler is the last handler registered before `app.listen()`
+ */
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error("Exception at url: %s", req.url);
+    console.error(err);
+    res.sendStatus(500);
 });
 
 setupSshConnectionServices();

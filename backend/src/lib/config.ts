@@ -2,6 +2,7 @@ import path from "path";
 import fs from 'fs';
 import {promises as fsPromises} from 'fs';
 import bcrypt from 'bcryptjs';
+import { exit } from "process";
 
 const CONFIG_DIR = process.env.CONFIG_DIR || (__dirname + '/../');
 const config_path = path.resolve(CONFIG_DIR, 'config.json');
@@ -33,7 +34,8 @@ export function init(): Type {
     try {
         config = JSON.parse(fs.readFileSync(config_path).toString());
     } catch (e) {
-        //TODO handle
+        console.error(e);
+        exit(1);
     }
 
     if (!config.salt) {
