@@ -12,7 +12,7 @@
       <div class="modal-body">
         <div v-if="html" v-html="html"></div>
         <p v-else>{{ text }}</p>
-        <textarea ref="consoleView" class="form-control" v-if="consoleOutput!==null" readonly></textarea>
+        <div ref="consoleView" class="form-control" id="textarea" v-if="consoleOutput!==null" readonly></div>
       </div>
       <div class="modal-footer text-center">
         <template v-if="mode=='yesno'">
@@ -29,6 +29,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { Modal } from 'bootstrap';
+import { AnsiUp } from 'ansi_up';
 
 export default defineComponent({
     data() {
@@ -41,7 +42,8 @@ export default defineComponent({
             consoleOutput: <string|null> null,
             modal: <Modal> {},
             onYesClicked: () => {},
-            onClosed: () => {}
+            onClosed: () => {},
+            ansiUp: new AnsiUp()
         }
     },
     mounted() {
@@ -101,9 +103,9 @@ export default defineComponent({
     },
     watch: {
       consoleOutput() {
-        const view = <HTMLTextAreaElement|undefined> this.$refs.consoleView;
+        const view = <HTMLDivElement|undefined> this.$refs.consoleView;
         if (view) {
-          view.textContent = this.consoleOutput;
+          view.innerHTML = this.ansiUp.ansi_to_html(this.consoleOutput!).replace(/\n/g, '<br/>');
           view.scrollTop = view.scrollHeight;
         }
       }
@@ -116,8 +118,9 @@ div.modal-footer {
   justify-content: center;
 }
 
-textarea {
+div#textarea {
   height: 600px;
   font-family: monospace;
+  overflow: auto;
 }
 </style>
