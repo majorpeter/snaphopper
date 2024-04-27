@@ -13,14 +13,14 @@
                     Could not save <code>{{ filepath }}</code>.
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @click="state='idle'"></button>
                 </div>
-                <textarea class="form-control" id="composeFileYaml" v-model="content"></textarea>
+                <HighCode ref="highcode" :textEditor="true" lang="yaml" theme="light" :copy="false" :nameShow="false" borderRadius="0" width="100%" height="400px"></HighCode>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" @click="snapshotSaveApply" :disabled="content==saved_content || state=='saving'">
+                <button type="button" class="btn btn-primary" @click="snapshotSaveApply" :disabled="highcode?.modelValue==saved_content || state=='saving'">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="state=='saving'"></span>
                     Snapshot, Save & Apply
                 </button>
-                <button type="button" class="btn btn-primary" @click="save" :disabled="content==saved_content || state=='saving'">
+                <button type="button" class="btn btn-primary" @click="save" :disabled="highcode?.modelValue==saved_content || state=='saving'">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="state=='saving'"></span>
                     Save
                 </button>
@@ -32,12 +32,14 @@
 </template>
 
 <script lang="ts">
-import { PropType, defineComponent } from 'vue';
+import { PropType, defineComponent, ref } from 'vue';
 import { Modal } from 'bootstrap';
+import { HighCode } from 'vue-highlight-code';
 import { endpoints } from '@api';
 import ApiClient from '@/services/ApiClient';
 
 import { generateSnapshotName } from '../Stack.vue'
+import 'vue-highlight-code/dist/style.css';
 
 export default defineComponent({
     props: {
@@ -47,6 +49,9 @@ export default defineComponent({
         createSnapshot: Function as PropType<(name: string) => Promise<void>>,
         composeUp: Function as PropType<() => Promise<void>>
     },
+    components: {
+        HighCode
+    },
     emits: {
         'compose-file-changed': null
     },
@@ -54,9 +59,12 @@ export default defineComponent({
         return {
             modal: <Modal> {},
             saved_content: '',
-            content: '',
             state: <'hidden'|'loading'|'idle'|'saving'|'save_error'> 'hidden'
         }
+    },
+    setup() {
+        const highcode = ref<HighCode>();
+        return {highcode};
     },
     mounted() {
         this.modal = new Modal(<Element> document.getElementById('composeFileModal'), {backdrop: 'static', keyboard: false});
@@ -64,7 +72,7 @@ export default defineComponent({
     methods: {
         async showComposeFile() {
             this.state = 'loading';
-            this.content = this.saved_content = <endpoints.stack.docker_compose_file.get_resp_type> (await ApiClient().get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
+            this.highcode!.modelValue = this.saved_content = <endpoints.stack.docker_compose_file.get_resp_type> (await ApiClient().get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
 
             this.modal.show();
             this.state = 'idle';
@@ -72,15 +80,17 @@ export default defineComponent({
         async save() {
             this.state = 'saving';
             try {
-                await ApiClient().post(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose_file.post_req_type> {content: this.content});
+                await ApiClient().post(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name), <endpoints.stack.docker_compose_file.post_req_type> {content: this.highcode!.modelValue});
                 this.state = 'idle';
-                this.saved_content = this.content;
+                this.saved_content = this.highcode!.modelValue;
                 this.$emit('compose-file-changed');
             } catch (e) {
                 this.state = 'save_error';
             }
         },
         async snapshotSaveApply() {
+            this.$data.state = 'saving';    // $data is required not to confuse TS with the comparison below
+
             await this.createSnapshot!(generateSnapshotName('compose'));
             await this.save();
 
@@ -91,10 +101,3 @@ export default defineComponent({
     }
 });
 </script>
-
-<style scoped>
-textarea#composeFileYaml {
-    height: 400px;
-    font-family: monospace;
-}
-</style>
