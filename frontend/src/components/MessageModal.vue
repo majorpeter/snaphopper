@@ -7,7 +7,7 @@
           {{ title }}
           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="showSpinner"></span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" :disabled="busy"></button>
       </div>
       <div class="modal-body">
         <div v-if="html" v-html="html"></div>
@@ -16,8 +16,11 @@
       </div>
       <div class="modal-footer text-center">
         <template v-if="mode=='yesno'">
-          <button type="button" class="btn btn-primary" @click="onYesClicked">Yes</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+          <button type="button" class="btn btn-primary" @click="onYesClicked" :disabled="busy">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="busy"></span>
+            Yes
+          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" :disabled="busy">No</button>
         </template>
         <button v-else type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
@@ -39,6 +42,7 @@ export default defineComponent({
             html: '',
             showSpinner: false,
             mode: <'message'|'yesno'> 'message',
+            busy: false,
             consoleOutput: <string|null> null,
             modal: <Modal> {},
             onYesClicked: () => {},
@@ -59,6 +63,7 @@ export default defineComponent({
             this.html = '';
             this.consoleOutput = null;
             this.mode = 'message';
+            this.busy = false;
         },
         show(title: string, text: string) {
             this.reset()
@@ -89,6 +94,7 @@ export default defineComponent({
             this.mode = 'yesno';
 
             this.onYesClicked = async () => {
+              this.busy = true;
               await yesCallback();
               this.modal.hide();
             };
