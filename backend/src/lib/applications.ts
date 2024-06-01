@@ -11,7 +11,7 @@ export type exec = (command: string, args: string[], options?: {
 // returns a callback to close shell
 export type shell = (
     command_line: string,
-    onStdout: (chunk: Buffer) => void) => Promise<() => void>;
+    onStdout: (chunk: Buffer) => void) => Promise<(() => void)|null>;
 
 export interface DockerComposeYaml {
     version: string;
@@ -167,7 +167,7 @@ export class Applications {
         }
     }
 
-    async composeLogsStream(name: string, onStdout: (chunk: Buffer) => void): Promise<() => void> {
+    async composeLogsStream(name: string, onStdout: (chunk: Buffer) => void): Promise<(() => void)|null> {
         if (this.path && this.shell && await this.projectExists(name)) {
             return await this.shell(`cd ${this.path}/${name} && docker-compose logs --follow --tail=200`, onStdout);
         }

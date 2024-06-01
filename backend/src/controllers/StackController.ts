@@ -251,10 +251,15 @@ export default function(app: Express, server: http.Server, docker: Docker, appli
                 if (isWsTokenValid(initMessage.token)) {
                     applications.composeLogsStream(initMessage.stack_name, (chunk) => {
                         socket.send(chunk.toString());
-                    }).then(closeCallback => {
-                        socket.on('close', (_code, _reason) => {
-                            closeCallback();
-                        });
+                    }).then(closeCallbackOrBusy => {
+                        if (closeCallbackOrBusy) {
+                            socket.on('close', (_code, _reason) => {
+                                closeCallbackOrBusy();
+                            });
+                        } else {
+                            socket.send('Client busy!');
+                            socket.close();
+                        }
                     });
                 } else {
                     socket.send('Token invalid!');

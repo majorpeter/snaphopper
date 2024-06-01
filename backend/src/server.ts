@@ -3,7 +3,6 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 
 import path from 'path';
-import {NodeSSH} from 'node-ssh';
 import {Docker} from './lib/docker';
 import { Zfs } from './lib/zfs';
 import { Config } from './lib/config';
@@ -14,7 +13,7 @@ import StackController from './controllers/StackController';
 import { Applications } from './lib/applications';
 import { setAuthenticationDisabled } from './lib/policies';
 import UpdateController from './controllers/UpdateController';
-import { setTimeout } from 'timers/promises';
+import { SshQueue } from './lib/sshqueue';
 
 const frontend_relative_path = '../../frontend/dist';
 const config = Config.init();
@@ -70,7 +69,8 @@ async function setupSshConnectionServices() {
     }
 
     try {
-        let ssh = new NodeSSH();
+        const ssh = new SshQueue();
+
         await ssh.connect({
             host: config.ssh_host,
             username: config.ssh_username,
@@ -85,7 +85,7 @@ async function setupSshConnectionServices() {
             onStdout?: (chunk: Buffer) => void,
             onStderr?: (chunk: Buffer) => void
         }) => {
-            const result = (await ssh.exec(command, args, {
+            const result = (await ssh.execStream(command, args, {
                 stdin: options?.stdin,
                 cwd: options?.working_dir,
                 stream: 'both',
@@ -94,21 +94,7 @@ async function setupSshConnectionServices() {
             }));
             return result.stdout;
         }, async (command_line, onStdout) => {
-            const channel = await ssh.requestShell({modes: {
-                ECHO: 0     // do not echo the command we send
-            }});
-            await setTimeout(500);
-            channel.read();  // read everything from shell before actual command output
-            channel.write(command_line + '\n');
-            const periodic = setInterval(() => {
-                if (channel.readableLength > 0) {
-                    onStdout(channel.read());
-                }
-            }, 500);
-            return () => {
-                clearInterval(periodic);
-                channel.destroy();
-            };
+            return ssh.executeWithShell(command_line, onStdout);
         });
     } catch (e: any) {
         console.log(e);
