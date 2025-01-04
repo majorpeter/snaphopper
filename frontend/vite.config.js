@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import path from 'path';
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -8,17 +8,27 @@ export default defineConfig({
   server: {
     port: 8090,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8080/',
+      "/api": {
+        target: "http://localhost:8080/",
         changeOrigin: true,
-        ws: true
-      }
-    }
+        ws: true,
+      },
+    },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@api': path.resolve(__dirname, '../backend/src/lib/api.ts')
-    }
-  }
+      "@": path.resolve(__dirname, "./src"),
+      "@api": path.resolve(__dirname, "../backend/src/lib/api.ts"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          highlight: ["highlight.js", "vue-highlight-code"],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000, // TODO replace vue-highlight-code
+  },
 });
