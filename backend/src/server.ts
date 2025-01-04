@@ -77,8 +77,20 @@ async function setupSshConnectionServices() {
             privateKey: config.ssh_privkey
         });
 
-        docker.setAdapter((command, args) => {return ssh.exec(command, args)});
-        zfs.setAdapter((command, args) => {return ssh.exec(command, args)});
+        docker.setAdapter(async(command, args) => {
+            const s = await ssh.exec(command, args);
+            if (s == null) {
+                throw new Error(`Command failed: ${command} ${args}`);
+            }
+            return s;
+        });
+        zfs.setAdapter(async (command, args) => {
+            const s = await ssh.exec(command, args);
+            if (s == null) {
+                throw new Error(`Command failed: ${command} ${args}`);
+            }
+            return s;
+        });
         applications.setAdapter(async (command, args, options?: {
             stdin?: string,
             working_dir?: string,
