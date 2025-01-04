@@ -17,16 +17,14 @@
                     </p>
                 </div>
                 <div class="col-md-8">
-                    <p class="card-text">
-                        <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="userName" value="admin" readonly/>
-                            <label for="userName">User</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="password" class="form-control" @keypress="onPasswordKeyPressed" v-model="password" id="password" autofocus/>
-                            <label for="password">Password</label>
-                        </div>
-                    </p>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="userName" value="admin" readonly/>
+                        <label for="userName">User</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" @keypress="onPasswordKeyPressed" v-model="password" id="password" autofocus/>
+                        <label for="password">Password</label>
+                    </div>
                 </div>
             </div>
         </div>

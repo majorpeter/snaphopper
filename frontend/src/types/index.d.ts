@@ -1,7 +1,10 @@
-import { Store } from '@/store'
+import { Store } from "@/store";
+import { Router, RouteLocation } from "vue-router";
 
-declare module '@vue/runtime-core' {
+declare module "@vue/runtime-core" {
   interface ComponentCustomProperties {
-    $store: Store
+    $store: Store;
+    $route: RouteLocation;
+    $router: VueRouter;
   }
 }
