@@ -23,6 +23,13 @@ export class SshQueue {
     return this.ssh.connect(params);
   }
 
+  /**
+   * run a command via SSH and wait for any pending command
+   * @param command command to run, e.g. 'docker'
+   * @param args array of command arguments
+   * @param options same as NodeSSH options
+   * @returns stdout of successful command or 'null' on error
+   */
   async exec(
     command: string,
     args: string[],
@@ -33,10 +40,15 @@ export class SshQueue {
       onStdout?: (chunk: Buffer) => void;
       onStderr?: (chunk: Buffer) => void;
     }
-  ): Promise<string> {
-    const task = new Promise<string>(async (resolve) => {
-      await this.pending;
-      resolve(this.ssh.exec(command, args, options));
+  ): Promise<string | null> {
+    const task = new Promise<string | null>(async (resolve) => {
+      try {
+        await this.pending;
+        resolve(await this.ssh.exec(command, args, options));
+      } catch (e) {
+        // have to resolve in order for the Promise chain to work after error
+        resolve(null);
+      }
     });
     this.pending = task;
     return task;
