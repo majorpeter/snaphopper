@@ -64,10 +64,11 @@ export class Applications {
         return null;
     }
 
-    async getProjectFileText(name: string): Promise<string|null> {
+    async getProjectFileText(name: string, snapshot?:string): Promise<string|null> {
         if (this.path && this.exec && await this.projectExists(name)) {
+            const filePath = !snapshot ? `${this.path}/${name}/${Docker.ConfigFileName}` : `${this.path}/${name}/.zfs/snapshot/${snapshot}/${Docker.ConfigFileName}`;
             try {
-                return await this.exec('cat', [this.path + '/' + name + '/' + Docker.ConfigFileName]);
+                return await this.exec('cat', [filePath]);
             } catch (e) {
             }
         }

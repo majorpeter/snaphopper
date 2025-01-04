@@ -16,11 +16,11 @@
                 <HighCode ref="highcode" :textEditor="true" lang="yaml" theme="light" :copy="false" :nameShow="false" borderRadius="0" width="100%" height="400px"></HighCode>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" @click="snapshotSaveApply" :disabled="highcode?.modelValue==saved_content || state=='saving'">
+                <button type="button" class="btn btn-primary" @click="snapshotSaveApply" v-if="mode=='editor'" :disabled="highcode?.modelValue==saved_content || state=='saving'">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="state=='saving'"></span>
                     Snapshot, Save & Apply
                 </button>
-                <button type="button" class="btn btn-primary" @click="save" :disabled="highcode?.modelValue==saved_content || state=='saving'">
+                <button type="button" class="btn btn-primary" @click="save" v-if="mode=='editor'" :disabled="highcode?.modelValue==saved_content || state=='saving'">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="state=='saving'"></span>
                     Save
                 </button>
@@ -35,11 +35,14 @@
 import { PropType, defineComponent, ref } from 'vue';
 import { Modal } from 'bootstrap';
 import { HighCode } from 'vue-highlight-code';
+import { createPatch } from "diff";
 import { endpoints } from '@api';
 import ApiClient from '@/services/ApiClient';
 
 import { generateSnapshotName } from '../Stack.vue'
 import 'vue-highlight-code/dist/style.css';
+
+type Mode = 'editor'|'view'|'diff';
 
 export default defineComponent({
     props: {
@@ -59,6 +62,7 @@ export default defineComponent({
         return {
             modal: <Modal> {},
             saved_content: '',
+            mode: <Mode> 'editor',
             state: <'hidden'|'loading'|'idle'|'saving'|'save_error'> 'hidden'
         }
     },
@@ -70,9 +74,23 @@ export default defineComponent({
         this.modal = new Modal(<Element> document.getElementById('composeFileModal'), {backdrop: 'static', keyboard: false});
     },
     methods: {
-        async showComposeFile() {
+        async showComposeFile(mode: Mode, snapshot?: string) {
+            this.mode = mode;
+
             this.state = 'loading';
-            this.highcode!.modelValue = this.saved_content = <endpoints.stack.docker_compose_file.get_resp_type> (await ApiClient().get(endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name))).data;
+            let url = endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name);
+            if (snapshot) {
+                url += '?' + new URLSearchParams({snapshot} satisfies endpoints.stack.docker_compose_file.query_type);
+            }
+            this.saved_content = <endpoints.stack.docker_compose_file.get_resp_type> (await ApiClient().get(url)).data;
+
+            if (mode != 'diff') {
+                this.highcode!.modelValue = this.saved_content
+            } else {
+                let url = endpoints.stack.docker_compose_file.url.replace(':name', <string> this.name);
+                let current_file = <endpoints.stack.docker_compose_file.get_resp_type> (await ApiClient().get(url)).data;
+                this.highcode!.modelValue = createPatch(this.filepath!, this.saved_content, current_file, '@' + snapshot, '(current)');
+            }
 
             this.modal.show();
             this.state = 'idle';

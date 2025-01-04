@@ -93,6 +93,9 @@ export namespace endpoints {
 
       export type params = {
         name: string;
+      }
+      export type query_type = {
+        snapshot?: string;
       };
       export type get_resp_type = string;
       export type post_req_type = {

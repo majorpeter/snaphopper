@@ -219,10 +219,10 @@ export default function(app: Express, server: http.Server, docker: Docker, appli
         }
     });
 
-    app.get<endpoints.stack.docker_compose_file.params, endpoints.stack.docker_compose_file.get_resp_type>(endpoints.stack.docker_compose_file.url, authenticationRequred, async (req, res) => {
+    app.get<endpoints.stack.docker_compose_file.params, endpoints.stack.docker_compose_file.get_resp_type, {}, endpoints.stack.docker_compose_file.query_type>(endpoints.stack.docker_compose_file.url, authenticationRequred, async (req, res) => {
         if (docker.available) {
             res.contentType('yaml');
-            const contents = await applications.getProjectFileText(req.params.name);
+            const contents = await applications.getProjectFileText(req.params.name, req.query.snapshot);
             res.send(contents ? contents : '');
         } else {
             res.sendStatus(500);

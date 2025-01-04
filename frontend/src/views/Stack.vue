@@ -31,7 +31,7 @@
         <td v-if="data.compose_config_file_name">
             <code>{{ data.compose_config_file_name }}</code>
             &nbsp;
-            <button type="button" class="btn btn-primary" @click="showComposeFileClicked" :disabled="composeFileLoading || dockerComposeExecuting">
+            <button type="button" class="btn btn-primary" @click="showComposeFileClicked()" :disabled="composeFileLoading || dockerComposeExecuting">
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-if="composeFileLoading"></span>
                 ...
             </button>
@@ -96,6 +96,10 @@
     </h4>
     <div :id="'collapse_'+i" class="accordion-collapse collapse" :aria-labelledby="'collapsehead_'+i" data-bs-parent="#snapshotList">
         <div class="accordion-body">
+            Docker-compose file
+            <button @click="showComposeFileClicked(snapshot.name)" class="btn btn-primary me-1">Show</button>
+            <button @click="diffComposeFileClicked(snapshot.name)" class="btn btn-primary me-1">Compare</button>
+
             <p>Used: <strong>{{ snapshot.used }}</strong></p>
             <p>Referenced: <strong>{{ snapshot.referenced }}</strong></p>
 
@@ -352,8 +356,11 @@ export default defineComponent({
 
             this.createSnapshotModal.modal.show();
         },
-        async showComposeFileClicked() {
-            (<typeof DockerComposeFile> this.$refs.composeFile).showComposeFile();
+        async showComposeFileClicked(snapshot?: string) {
+            (<typeof DockerComposeFile> this.$refs.composeFile).showComposeFile(snapshot ? 'view' : 'editor', snapshot);
+        },
+        async diffComposeFileClicked(snapshot: string) {
+            (<typeof DockerComposeFile> this.$refs.composeFile).showComposeFile('diff', snapshot);
         },
         async createSnapshot(name: string) {
             if (this.data.zfs_dataset) {
