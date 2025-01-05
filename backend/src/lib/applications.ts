@@ -1,5 +1,6 @@
 import yaml from 'js-yaml';
 import { Docker } from './docker';
+import { Zfs } from './zfs';
 
 export type exec = (command: string, args: string[], options?: {
     stdin?: string,
@@ -24,15 +25,15 @@ export interface DockerComposeYaml {
 };
 
 export class Applications {
-    private exec: exec|undefined;
-    private shell: shell|undefined;
-    private path: string|undefined;
+    private exec?: exec;
+    private shell?: shell;
+    private path?: string;
 
     setPath(path?: string) {
         this.path = path;
     }
 
-    setAdapter(exec: exec|undefined, shell: shell|undefined) {
+    setAdapter(exec?: exec, shell?: shell) {
         this.exec = exec;
         this.shell = shell;
     }
@@ -65,7 +66,12 @@ export class Applications {
     }
 
     async getProjectFileText(name: string, snapshot?:string): Promise<string|null> {
-        if (this.path && this.exec && await this.projectExists(name)) {
+        Zfs.assertNameValid(name);
+        if (snapshot) {
+            Zfs.assertNameValid(snapshot);
+        }
+
+        if (this.path && this.exec) {
             const filePath = !snapshot ? `${this.path}/${name}/${Docker.ConfigFileName}` : `${this.path}/${name}/.zfs/snapshot/${snapshot}/${Docker.ConfigFileName}`;
             try {
                 return await this.exec('cat', [filePath]);
@@ -76,6 +82,7 @@ export class Applications {
     }
 
     async writeProjectFile(name: string, contents: string): Promise<boolean> {
+        Zfs.assertNameValid(name);
         if (this.path && this.exec && await this.projectExists(name)) {
             try {
                 await this.exec('tee', [this.path + '/' + name + '/' + Docker.ConfigFileName], {stdin: contents});
@@ -87,6 +94,9 @@ export class Applications {
     }
 
     async isCustomContainerGitRepo(name: string, buildLocation: string): Promise<boolean> {
+        Zfs.assertNameValid(name);
+        //TODO buildLocation validation
+
         if (this.path && this.exec && await this.projectExists(name)) {
             return (await this.exec('ls', [this.path + '/' + name + '/' + buildLocation + '/.git'])) != '';
         }
@@ -94,6 +104,7 @@ export class Applications {
     }
 
     async pullCustomContainerGitRepo(name: string, serviceName: string, onStdout: (chunk: Buffer) => void): Promise<void> {
+        Zfs.assertNameValid(name);
         if (this.exec) {
             const project = await this.getProject(name);
             if (project) {
@@ -129,6 +140,7 @@ export class Applications {
     }
 
     async composeUp(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
+        Zfs.assertNameValid(name);
         if (this.path && this.exec && await this.projectExists(name)) {
             await this.exec('docker-compose', ['up', '-d'], {
                 working_dir: this.path + '/' + name,
@@ -139,6 +151,7 @@ export class Applications {
     }
 
     async composeDown(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
+        Zfs.assertNameValid(name);
         if (this.path && this.exec && await this.projectExists(name)) {
             await this.exec('docker-compose', ['down'], {
                 working_dir: this.path + '/' + name,
@@ -149,6 +162,7 @@ export class Applications {
     }
 
     async composePull(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
+        Zfs.assertNameValid(name);
         if (this.path && this.exec && await this.projectExists(name)) {
             await this.exec('docker-compose', ['pull'], {
                 working_dir: this.path + '/' + name,
@@ -159,6 +173,7 @@ export class Applications {
     }
 
     async composeBuild(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
+        Zfs.assertNameValid(name);
         if (this.path && this.exec && await this.projectExists(name)) {
             await this.exec('docker-compose', ['build'], {
                 working_dir: this.path + '/' + name,
@@ -169,6 +184,7 @@ export class Applications {
     }
 
     async composeLogsStream(name: string, onStdout: (chunk: Buffer) => void): Promise<(() => void)|null> {
+        Zfs.assertNameValid(name);
         if (this.path && this.shell && await this.projectExists(name)) {
             return await this.shell(`cd ${this.path}/${name} && docker-compose logs --follow --tail=200`, onStdout);
         }

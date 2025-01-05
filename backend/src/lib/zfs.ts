@@ -97,6 +97,12 @@ export class Zfs {
         return Boolean(name.match(pattern));
     }
 
+    static assertNameValid(name: string) {
+        if (!this.isNameValid(name)) {
+            throw new Error("Invalid ZFS name: "+name);
+        }
+    }
+
     static isPathValid(path: string): boolean {
         return path.split('/').every((value) => Zfs.isNameValid(value));
     }
