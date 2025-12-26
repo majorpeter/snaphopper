@@ -47,11 +47,11 @@ This is required for shells to work _interactively_ (docker-compose actions, git
 
 == Test environment
 
-The application was developed and tested on a link:https://www.truenas.com/truenas-scale/[TrueNAS Scale] _22.12.2_ host with the following dependencies:
+The application was developed and tested on a link:https://www.truenas.com/truenas-scale/[TrueNAS Scale] _24.10.2_ host with the following dependencies:
 
-* `Docker version 20.10.18, build b40c2f6`
-* `docker-compose version 1.25.0`
-* `zfs 2.1.9`
+* `Docker version 27.1.1, build 6312585`
+* `Docker Compose version v2.29.1`
+* `zfs-2.2.99-1`
 
 [IMPORTANT]
 ====

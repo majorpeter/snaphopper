@@ -142,7 +142,7 @@ export class Applications {
     async composeUp(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
         Zfs.assertNameValid(name);
         if (this.path && this.exec && await this.projectExists(name)) {
-            await this.exec('docker-compose', ['up', '-d'], {
+            await this.exec('docker', ['compose', 'up', '-d'], {
                 working_dir: this.path + '/' + name,
                 onStdout: onStdout,
                 onStderr: onStdout
@@ -153,7 +153,7 @@ export class Applications {
     async composeDown(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
         Zfs.assertNameValid(name);
         if (this.path && this.exec && await this.projectExists(name)) {
-            await this.exec('docker-compose', ['down'], {
+            await this.exec('docker', ['compose', 'down'], {
                 working_dir: this.path + '/' + name,
                 onStdout: onStdout,
                 onStderr: onStdout
@@ -164,7 +164,7 @@ export class Applications {
     async composePull(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
         Zfs.assertNameValid(name);
         if (this.path && this.exec && await this.projectExists(name)) {
-            await this.exec('docker-compose', ['pull'], {
+            await this.exec('docker', ['compose', 'pull'], {
                 working_dir: this.path + '/' + name,
                 onStdout: onStdout,
                 onStderr: onStdout
@@ -175,7 +175,7 @@ export class Applications {
     async composeBuild(name: string, onStdout: (chunk: Buffer) => void): Promise<void> {
         Zfs.assertNameValid(name);
         if (this.path && this.exec && await this.projectExists(name)) {
-            await this.exec('docker-compose', ['build'], {
+            await this.exec('docker', ['compose', 'build'], {
                 working_dir: this.path + '/' + name,
                 onStdout: onStdout,
                 onStderr: onStdout
@@ -186,7 +186,7 @@ export class Applications {
     async composeLogsStream(name: string, onStdout: (chunk: Buffer) => void): Promise<(() => void)|null> {
         Zfs.assertNameValid(name);
         if (this.path && this.shell && await this.projectExists(name)) {
-            return await this.shell(`cd ${this.path}/${name} && docker-compose logs --follow --tail=200`, onStdout);
+            return await this.shell(`cd ${this.path}/${name} && docker compose logs --follow --tail=200`, onStdout);
         }
         return () => {};
     }

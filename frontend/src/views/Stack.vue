@@ -254,7 +254,7 @@ export default defineComponent({
                 messageModal.showSpinner = false;
                 this.reloadData();
             } catch (e) {
-                (<typeof MessageModal> this.$refs.message).show('"docker-compose up -d" failed', 'Command failed');
+                (<typeof MessageModal> this.$refs.message).show('"docker compose up -d" failed', 'Command failed');
             }
             this.dockerComposeExecuting = false;
         },
@@ -278,7 +278,7 @@ export default defineComponent({
                 messageModal.showSpinner = false;
                 this.reloadData();
             } catch (e) {
-                (<typeof MessageModal> this.$refs.message).show('"docker-compose down" failed', 'Command failed');
+                (<typeof MessageModal> this.$refs.message).show('"docker compose down" failed', 'Command failed');
             }
             this.dockerComposeExecuting = false;
         },
@@ -302,7 +302,7 @@ export default defineComponent({
                 messageModal.showSpinner = false;
                 this.reloadData();
             } catch (e) {
-                (<typeof MessageModal> this.$refs.message).show('"docker-compose build" failed', 'Command failed');
+                (<typeof MessageModal> this.$refs.message).show('"docker compose build" failed', 'Command failed');
             }
             this.dockerComposeExecuting = false;
         },
@@ -326,7 +326,7 @@ export default defineComponent({
                 messageModal.showSpinner = false;
                 this.reloadData();
             } catch (e) {
-                (<typeof MessageModal> this.$refs.message).show('"docker-compose build" failed', 'Command failed');
+                (<typeof MessageModal> this.$refs.message).show('"docker compose build" failed', 'Command failed');
             }
             this.dockerComposeExecuting = false;
         },
