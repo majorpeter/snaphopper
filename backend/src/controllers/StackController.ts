@@ -133,6 +133,7 @@ export default function(app: Express, server: http.Server, docker: Docker, appli
                     try {
                         data.services = await extractServiceData(req.params.name, project, stack);
                     } catch (e) {
+                        console.error(e);
                         data.compose_config_invalid = true;
                     }
                 }
@@ -147,9 +148,10 @@ export default function(app: Express, server: http.Server, docker: Docker, appli
                     if (!data.compose_config_file_name) {
                         data.compose_config_file_name = compose_config_file_set.values().next().value;
                     }
-                    data.working_directory_error =  data.working_directory != working_dir_set.values().next().value ||
-                                                    data.compose_config_file_name != compose_config_file_set.values().next().value ||
-                                                    (working_dir_set.size != 1) || (compose_config_file_set.size != 1);
+                    data.working_directory_error =  (working_dir_set.size != 1) || (compose_config_file_set.size != 1) ||
+                                                    data.working_directory != working_dir_set.values().next().value ||
+                                                    (data.compose_config_file_name != compose_config_file_set.values().next().value &&
+                                                    data.working_directory + '/' + data.compose_config_file_name != compose_config_file_set.values().next().value);
                 }
             }
 
