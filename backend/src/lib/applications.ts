@@ -127,6 +127,18 @@ export class Applications {
             const folders = await this.getProjectFolders();
             for (const f of folders) {
                 try {
+                    const folder = (await this.exec('ls', ['-F1', this.path + '/' + f])).split('\n');
+                    if (!folder.includes(Docker.ConfigFileName)) {
+                        continue;
+                    }
+                }
+                catch (e) {
+                    console.error(e);
+                    continue;
+                }
+
+                try {
+
                     const yamlContent = await this.exec('cat', [this.path + '/' + f + '/' + Docker.ConfigFileName]);
                     result[f] = {
                         compose: <DockerComposeYaml> yaml.load(yamlContent)
