@@ -75,7 +75,7 @@ export class Docker {
 
     async inspectImages(names: string[]): Promise<ImageInfo[]> {
         // default to 'latest' tag if not loooking for a tag / sha256
-        names = names.map(i => i.indexOf(':') != -1 ? i : i + ':latest');
+        names = names.map(i => i.indexOf(':') != -1 ? i : i + ':latest').map(i => i.split('@sha256:')[0]);
 
         const notCachedIds = names.filter((i) => !Object.keys(this.imageInfoCache).includes(i));
         const data: ImageInfo[] = notCachedIds.length ? JSON.parse(await this.exec!('docker', ['image', 'inspect', ...notCachedIds])) : [];
